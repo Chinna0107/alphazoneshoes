@@ -1,6 +1,6 @@
 const config = {
   API_URL: import.meta.env.MODE === 'production' 
-    ? 'https://cmbe.vercel.app' 
+    ? 'https://alphazonebe.vercel.app' 
     : 'http://localhost:3000'
 };
 
