@@ -1,8 +1,10 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import logo from '../assets/logo2.jpeg';
 import './AdminHeader.css';
 
 const AdminHeader = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   const handleLogout = () => {
@@ -11,25 +13,43 @@ const AdminHeader = () => {
     navigate('/login');
   };
 
+  const isActive = (path) => location.pathname === path;
+
   return (
-    <header className="admin-header-bar">
-      <div className="admin-header-logo">
-        <img src="https://res.cloudinary.com/dgyykbmt6/image/upload/v1772460868/cm3_zvfuyu.jpg" alt="CM Mart" />
-        <h1>CM Super Mart - Admin Panel</h1>
+    <header className="admin-header">
+      <div className="admin-header-left">
+        <img src={logo} alt="AlphaZOne" className="admin-logo" />
+        <div className="admin-brand">
+          <span className="ab-alpha">Alpha</span><span className="ab-zone">ZOne</span>
+          <span className="ab-tag">Admin</span>
+        </div>
       </div>
-      <div className="admin-header-actions">
-        <span className="admin-user">Welcome, {user.email || 'Admin'}</span>
-        <button className="admin-btn-header" onClick={() => navigate('/admin/products')}>
-          Manage Products
+
+      <nav className="admin-nav">
+        <button
+          className={`admin-nav-btn ${isActive('/admin/products') ? 'active' : ''}`}
+          onClick={() => navigate('/admin/products')}
+        >
+          📦 Products
         </button>
-        <button className="admin-btn-header" onClick={() => navigate('/admin/sliders')}>
-          Manage Sliders
+        <button
+          className={`admin-nav-btn ${isActive('/admin/sliders') ? 'active' : ''}`}
+          onClick={() => navigate('/admin/sliders')}
+        >
+          🖼️ Sliders
         </button>
-        <button className="admin-btn-header" onClick={() => navigate('/')}>
-          View Store
+        <button className="admin-nav-btn" onClick={() => navigate('/')}>
+          🏪 View Store
         </button>
-        <button className="admin-btn-header logout" onClick={handleLogout}>
-          Logout
+      </nav>
+
+      <div className="admin-header-right">
+        <div className="admin-user-pill">
+          <span className="admin-user-dot" />
+          <span>{user.email || 'Admin'}</span>
+        </div>
+        <button className="admin-logout-btn" onClick={handleLogout}>
+          🚪 Logout
         </button>
       </div>
     </header>

@@ -6,6 +6,8 @@ import Footer from './components/Footer'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Products from './pages/Products'
+import ProductDetail from './pages/ProductDetail'
+import Checkout from './pages/Checkout'
 import AdminProducts from './pages/AdminProducts'
 import AdminSliders from './pages/AdminSliders'
 import NotFound from './pages/NotFound'
@@ -34,6 +36,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/products/:slug" element={<ProductDetail />} />
+          <Route path="/checkout" element={<Checkout />} />
           <Route path="/admin/products" element={<AdminProducts />} />
           <Route path="/admin/sliders" element={<AdminSliders />} />
           <Route path="/contact" element={<Contact />} />

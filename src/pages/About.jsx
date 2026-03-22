@@ -1,57 +1,56 @@
 import './About.css';
 
-const About = () => {
-  return (
-    <div className="about-page">
-      <div className="about-container">
-        <h1>About Us</h1>
-        <p className="about-subtitle">Your trusted source for quality groceries and daily essentials</p>
-        
-        <div className="about-content">
-          <div className="about-logo">
-            <img src="https://res.cloudinary.com/dgyykbmt6/image/upload/v1772460868/cm3_zvfuyu.jpg" alt="CM Mart Logo" />
-          </div>
-          
-          <h2>Our Story</h2>
-          <p>Welcome to CM Mart — your neighborhood supermarket where quality meets convenience! Founded with a vision to provide fresh, quality products at affordable prices, CM Mart has become a trusted name in the community.</p>
-          <p>We understand the importance of having access to fresh groceries, daily essentials, and household items without compromising on quality. That's why we carefully source our products from trusted suppliers and local farmers to ensure you get the best.</p>
-          <p>From fresh fruits and vegetables to pantry staples, dairy products, snacks, beverages, and personal care items — CM Mart is your one-stop shop for all your daily needs.</p>
-        </div>
+const About = () => (
+  <div className="about-page">
+    <div className="about-hero">
+      <div className="about-hero-content glass">
+        <h1><span className="a-alpha">Alpha</span><span className="a-zone">ZOne</span></h1>
+        <p>Your premium fashion destination for footwear & apparel</p>
+      </div>
+    </div>
 
-        <div className="features-grid">
-          <div className="feature-card">
-            <div className="feature-icon">🛒</div>
-            <h3>Wide Selection</h3>
-            <p>Thousands of products across all categories for your convenience</p>
-          </div>
-          
-          <div className="feature-card">
-            <div className="feature-icon">✓</div>
-            <h3>Quality Assured</h3>
-            <p>Fresh products meeting the highest standards of quality</p>
-          </div>
-          
-          <div className="feature-card">
-            <div className="feature-icon">🚚</div>
-            <h3>Fast Delivery</h3>
-            <p>Quick delivery with freshness guaranteed</p>
-          </div>
-        </div>
+    <div className="about-container">
+      <div className="about-story glass">
+        <h2>Our Story</h2>
+        <p>Welcome to <strong>AlphaZOne</strong> — where fashion meets comfort. We started with a simple mission: to bring premium quality sandals, shoes, slippers, tshirts, and night pants to everyone at prices that make sense.</p>
+        <p>From trendy sneakers to ultra-soft night pants, every product at AlphaZOne is carefully curated to ensure you look great and feel even better. We believe fashion should be accessible, comfortable, and expressive.</p>
+        <p>Whether you're stepping out in style or lounging at home, AlphaZOne has you covered — head to toe.</p>
+      </div>
 
-        <div className="values-section">
-          <h2>Our Vision & Values</h2>
-          <p>Our vision is simple — to make every household's shopping experience better by providing quality products, excellent service, and unbeatable value.</p>
-          <div className="values-list">
-            <div><strong>Quality:</strong> Never compromising on product quality</div>
-            <div><strong>Freshness:</strong> Fresh produce delivered daily</div>
-            <div><strong>Transparency:</strong> Complete honesty in our practices</div>
-            <div><strong>Customer First:</strong> Your satisfaction is our priority</div>
-            <div><strong>Community:</strong> Supporting local suppliers</div>
+      <div className="about-features">
+        {[
+          { icon: '👟', title: 'Premium Footwear', desc: 'Sandals, shoes & slippers for every occasion and lifestyle' },
+          { icon: '👕', title: 'Trendy Apparel', desc: 'Fresh tshirts and comfortable night pants for every mood' },
+          { icon: '🚚', title: 'Fast Delivery', desc: 'Quick doorstep delivery with freshness guaranteed' },
+          { icon: '✅', title: 'Quality Assured', desc: 'Every product quality-checked before it reaches you' },
+        ].map((f, i) => (
+          <div key={i} className="about-feature-card glass">
+            <span className="af-icon">{f.icon}</span>
+            <h3>{f.title}</h3>
+            <p>{f.desc}</p>
           </div>
+        ))}
+      </div>
+
+      <div className="about-values glass">
+        <h2>Our Values</h2>
+        <div className="values-grid">
+          {[
+            { label: 'Quality', desc: 'Never compromising on product quality' },
+            { label: 'Style', desc: 'Keeping up with the latest fashion trends' },
+            { label: 'Comfort', desc: 'Products designed for all-day comfort' },
+            { label: 'Affordability', desc: 'Premium fashion at accessible prices' },
+            { label: 'Customer First', desc: 'Your satisfaction is our top priority' },
+          ].map((v, i) => (
+            <div key={i} className="value-item">
+              <span className="value-dot" />
+              <div><strong>{v.label}:</strong> {v.desc}</div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
-  );
-};
+  </div>
+);
 
 export default About;

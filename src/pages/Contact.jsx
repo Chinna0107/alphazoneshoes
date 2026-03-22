@@ -8,8 +8,7 @@ const Contact = () => {
     const name = e.target.name.value;
     const email = e.target.email.value;
     const message = e.target.message.value;
-    const whatsappMessage = `Name: ${name}%0AEmail: ${email}%0AMessage: ${message}`;
-    window.open(`https://wa.me/919100009907?text=${whatsappMessage}`, '_blank');
+    window.open(`https://wa.me/919100009907?text=Name: ${name}%0AEmail: ${email}%0AMessage: ${message}`, '_blank');
     toast.success('Redirecting to WhatsApp...');
     e.target.reset();
   };
@@ -19,52 +18,46 @@ const Contact = () => {
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="contact-container">
         <h1>Contact Us</h1>
-        <p className="contact-subtitle">We'd love to hear from you. Get in touch with us!</p>
-        
+        <p className="contact-subtitle">We'd love to hear from you — reach out anytime!</p>
+
         <div className="contact-grid">
           <div className="contact-info">
-            <h2>Get in touch</h2>
-            
+            <h2>Get in Touch</h2>
             <div className="info-item">
-              <h3>Phone</h3>
+              <h3>📞 Phone</h3>
               <p>+91 9100009907</p>
               <p>+91 7901288956</p>
             </div>
-
             <div className="info-item">
-              <h3>Email</h3>
-              <p>cmsupermart@gmail.com</p>
+              <h3>📧 Email</h3>
+              <p>alphazone@gmail.com</p>
             </div>
-
             <div className="info-item">
-              <h3>Address</h3>
-              <p>CM Mart C/o Sri Mahathi Enterprises<br />
-              Rangapuram Main Road<br />
-              Sangareddy X Road - 502001</p>
+              <h3>📍 Address</h3>
+              <p>AlphaZOne Fashion Store<br />Rangapuram Main Road<br />Sangareddy - 502001</p>
             </div>
-
             <div className="info-item">
-              <h3>Business Hours</h3>
-              <p>Monday - Sunday: 8:00 AM - 10:00 PM</p>
+              <h3>🕐 Business Hours</h3>
+              <p>Monday – Sunday: 9:00 AM – 9:00 PM</p>
             </div>
           </div>
 
           <div className="contact-form-wrapper">
-            <h2>Send us a message</h2>
+            <h2>Send a Message</h2>
             <form onSubmit={handleSubmit} className="contact-form">
               <div className="form-group">
                 <label>Your Name</label>
-                <input name="name" type="text" required />
+                <input name="name" type="text" placeholder="Enter your name" required />
               </div>
               <div className="form-group">
                 <label>Your Email</label>
-                <input name="email" type="email" required />
+                <input name="email" type="email" placeholder="Enter your email" required />
               </div>
               <div className="form-group">
                 <label>Your Message</label>
-                <textarea name="message" required rows="5"></textarea>
+                <textarea name="message" placeholder="Write your message..." required rows="5" />
               </div>
-              <button type="submit" className="submit-btn">Send Message</button>
+              <button type="submit" className="submit-btn">💬 Send via WhatsApp</button>
             </form>
           </div>
         </div>

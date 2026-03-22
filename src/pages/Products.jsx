@@ -1,298 +1,316 @@
 import { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Slider from 'react-slick';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
+import { MdStar, MdFilterList, MdClose, MdSearch } from 'react-icons/md';
 import config from '../config';
 import './Products.css';
+
+const CATEGORY_ICONS = { All: '🛍️', Sandals: '👡', Shoes: '👟', Slippers: '🩴', 'T-Shirts': '👕', 'Track Pants': '🩲' };
+const TAG_LABELS = {
+  bestseller: '🔥 Best Seller', popular: '⭐ Popular',
+  new: '🆕 New Arrival', offer: '💰 Offer',
+  trending: '📈 Trending', limited: '⏳ Limited',
+};
+const SORT_OPTIONS = [
+  { value: 'default', label: 'Default' },
+  { value: 'price-asc', label: 'Price: Low to High' },
+  { value: 'price-desc', label: 'Price: High to Low' },
+  { value: 'discount', label: 'Best Discount' },
+  { value: 'name', label: 'Name A–Z' },
+];
+
+const calcDiscount = (orig, sale) => {
+  const o = Number(orig), s = Number(sale);
+  if (!o || !s || o <= s) return null;
+  return Math.round(((o - s) / o) * 100);
+};
 
 const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState(null);
   const [allProducts, setAllProducts] = useState([]);
   const [categories, setCategories] = useState(['All']);
   const [loading, setLoading] = useState(true);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [showFilter, setShowFilter] = useState(false);
+  const [sortBy, setSortBy] = useState('default');
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [priceRange, setPriceRange] = useState([0, 10000]);
+  const [maxPrice, setMaxPrice] = useState(10000);
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', address: '' });
   const [selectedWeights, setSelectedWeights] = useState({});
   const { cart, addToCart, updateQuantity, clearCart, getCartCount, isInCart, getCartQuantity } = useCart();
   const location = useLocation();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+  useEffect(() => { fetchProducts(); }, []);
 
   useEffect(() => {
     if (location.state?.openCheckout && getCartCount() > 0) {
       setShowCheckout(true);
-      // Clear the state after opening checkout
+      window.history.replaceState({}, document.title);
+    }
+    if (location.state?.category) {
+      setSelectedCategory(location.state.category);
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get(`${config.API_URL}/api/products`);
-      if (response.data.success) {
-        setAllProducts(response.data.products);
-        const uniqueCategories = ['All', ...new Set(response.data.products.map(p => p.category))];
-        setCategories(uniqueCategories);
-      } else if (Array.isArray(response.data)) {
-        setAllProducts(response.data);
-        const uniqueCategories = ['All', ...new Set(response.data.map(p => p.category))];
-        setCategories(uniqueCategories);
-      }
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      alert('Backend server not running. Please start your backend server on port 3000.');
-    } finally {
-      setLoading(false);
+      const res = await axios.get(`${config.API_URL}/api/products`);
+      const list = res.data.success ? res.data.products : Array.isArray(res.data) ? res.data : [];
+      setAllProducts(list);
+      setCategories(['All', ...new Set(list.map(p => p.category))]);
+      const prices = list.flatMap(p => p.prices ? Object.values(p.prices).map(Number) : [p.price || 0]);
+      const max = Math.max(...prices, 1000);
+      setMaxPrice(max);
+      setPriceRange([0, max]);
+    } catch { /* silent */ }
+    finally { setLoading(false); }
+  };
+
+  const toggleTag = (tag) => setSelectedTags(prev =>
+    prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+  );
+
+  const getMinPrice = (product) => {
+    if (product.prices && typeof product.prices === 'object') {
+      return Math.min(...Object.values(product.prices).map(Number));
     }
+    return product.price || 0;
   };
 
-  const sliderSettings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 3000,
-    accessibility: false,
-    focusOnSelect: false,
-  };
-
-  const filteredProducts = allProducts.filter(product => {
-    const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const filteredProducts = allProducts
+    .filter(p => {
+      const matchCat = selectedCategory === 'All' || p.category === selectedCategory;
+      const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchTag = selectedTags.length === 0 || selectedTags.includes(p.tag);
+      const minP = getMinPrice(p);
+      const matchPrice = minP >= priceRange[0] && minP <= priceRange[1];
+      return matchCat && matchSearch && matchTag && matchPrice;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'price-asc') return getMinPrice(a) - getMinPrice(b);
+      if (sortBy === 'price-desc') return getMinPrice(b) - getMinPrice(a);
+      if (sortBy === 'name') return a.name.localeCompare(b.name);
+      if (sortBy === 'discount') {
+        const da = calcDiscount(a.originalPrices?.[Array.isArray(a.grams) ? a.grams[0] : a.grams], getMinPrice(a)) || 0;
+        const db = calcDiscount(b.originalPrices?.[Array.isArray(b.grams) ? b.grams[0] : b.grams], getMinPrice(b)) || 0;
+        return db - da;
+      }
+      return 0;
+    });
 
   const cartItems = Object.values(cart).map(item => {
     const product = allProducts.find(p => p.id === item.productId);
     if (!product) return null;
     const price = product.prices?.[item.weight] || product.price || 0;
     return { ...product, quantity: item.quantity, selectedWeight: item.weight, selectedPrice: price };
-  }).filter(item => item !== null);
+  }).filter(Boolean);
 
   const total = cartItems.reduce((sum, item) => sum + (item.selectedPrice * item.quantity), 0);
 
   const handleCheckout = () => {
-    const orderDetails = cartItems.map(item => 
+    const orderDetails = cartItems.map(item =>
       `${item.name} (${item.selectedWeight}) x ${item.quantity} = ₹${item.selectedPrice * item.quantity}`
     ).join('%0A');
-
-    const message = `*New Order from CM Super Mart*%0A%0A*Customer Details:*%0AName: ${formData.name}%0APhone: ${formData.phone}%0AEmail: ${formData.email}%0AAddress: ${formData.address}%0A%0A*Order Details:*%0A${orderDetails}%0A%0A*Total: ₹${total}*`;
-
-    const whatsappNumber = '919100009907';
-    window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
-    
+    const message = `*New Order from AlphaZOne*%0A%0A*Customer Details:*%0AName: ${formData.name}%0APhone: ${formData.phone}%0AEmail: ${formData.email}%0AAddress: ${formData.address}%0A%0A*Order Details:*%0A${orderDetails}%0A%0A*Total: ₹${total}*`;
+    window.open(`https://wa.me/919100009907?text=${message}`, '_blank');
     clearCart();
     setShowCheckout(false);
     setFormData({ name: '', phone: '', email: '', address: '' });
   };
 
+  const activeFiltersCount = selectedTags.length + (sortBy !== 'default' ? 1 : 0) + (priceRange[1] < maxPrice ? 1 : 0);
+
   return (
     <div className="products-page">
-      <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Search products..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        {getCartCount() > 0 && (
-          <button className="checkout-btn-top" onClick={() => setShowCheckout(true)}>
-            Checkout ({getCartCount()} items)
+
+      {/* Top Bar */}
+      <div className="products-topbar">
+        <div className="search-wrap">
+          <MdSearch className="search-icon-inner" />
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          {searchTerm && <button className="search-clear" onClick={() => setSearchTerm('')}><MdClose /></button>}
+        </div>
+        <div className="topbar-actions">
+          <button className={`filter-toggle-btn ${showFilter ? 'active' : ''}`} onClick={() => setShowFilter(!showFilter)}>
+            <MdFilterList />
+            Filters
+            {activeFiltersCount > 0 && <span className="filter-count">{activeFiltersCount}</span>}
           </button>
-        )}
+          <select className="sort-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+            {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+          {getCartCount() > 0 && (
+            <button className="checkout-btn-top" onClick={() => setShowCheckout(true)}>
+              🛒 Checkout ({getCartCount()})
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Filter Panel */}
+      {showFilter && (
+        <div className="filter-panel glass">
+          <div className="filter-section">
+            <h4>Tags</h4>
+            <div className="filter-tags">
+              {Object.entries(TAG_LABELS).map(([val, label]) => (
+                <button
+                  key={val}
+                  className={`filter-tag-btn ${selectedTags.includes(val) ? 'active' : ''}`}
+                  onClick={() => toggleTag(val)}
+                >{label}</button>
+              ))}
+            </div>
+          </div>
+          <div className="filter-section">
+            <h4>Price Range <span>₹{priceRange[0]} – ₹{priceRange[1]}</span></h4>
+            <input
+              type="range" min={0} max={maxPrice}
+              value={priceRange[1]}
+              onChange={e => setPriceRange([priceRange[0], Number(e.target.value)])}
+              className="price-range-slider"
+            />
+          </div>
+          <button className="filter-reset" onClick={() => { setSelectedTags([]); setSortBy('default'); setPriceRange([0, maxPrice]); }}>
+            Reset Filters
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="loading-container">
           <div className="loading-spinner">
-            <div className="spinner-circle"></div>
-            <div className="spinner-circle"></div>
-            <div className="spinner-circle"></div>
+            <div className="spinner-circle" /><div className="spinner-circle" /><div className="spinner-circle" />
           </div>
           <p>Loading products...</p>
         </div>
       ) : (
         <div className="products-container">
+
+          {/* Sidebar */}
           <aside className="categories-sidebar">
             <h3>Categories</h3>
             <ul>
-              {categories.map(category => (
-                <li
-                  key={category}
-                  className={selectedCategory === category ? 'active' : ''}
-                  onClick={() => setSelectedCategory(category)}
-                >
-                  {category}
+              {categories.map(cat => (
+                <li key={cat} className={selectedCategory === cat ? 'active' : ''} onClick={() => setSelectedCategory(cat)}>
+                  <span>{CATEGORY_ICONS[cat] || '📦'}</span> {cat}
                 </li>
               ))}
             </ul>
+            <div className="sidebar-results">
+              <span>{filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}</span>
+            </div>
           </aside>
 
+          {/* Grid */}
           <div className="products-list">
             {filteredProducts.length === 0 ? (
-              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', fontSize: '1.2rem', color: '#666' }}>
-                No products available
+              <div className="no-products">
+                <span>🔍</span>
+                <p>No products found. Try adjusting your filters.</p>
+                <button onClick={() => { setSelectedCategory('All'); setSearchTerm(''); setSelectedTags([]); }}>Clear Filters</button>
               </div>
-            ) : (
-              filteredProducts.map((product, idx) => {
-                const defaultWeight = Array.isArray(product.grams) ? product.grams[0] : product.grams;
-                const currentWeight = selectedWeights[product.id] !== undefined ? selectedWeights[product.id] : defaultWeight;
-                const currentPrice = product.prices?.[currentWeight] || product.price || 0;
-                const badge = product.tag || '';
-                const badgeLabels = { bestseller: '🔥 Best Seller', popular: '⭐ Popular', new: '🆕 New', offer: '💰 Offer' };
-                
-                return (
-                <div key={product.id} className="product-item">
+            ) : filteredProducts.map(product => {
+              const defaultWeight = Array.isArray(product.grams) ? product.grams[0] : product.grams;
+              const currentWeight = selectedWeights[product.id] ?? defaultWeight;
+              const currentPrice = product.prices?.[currentWeight] || product.price || 0;
+              const origPrice = product.originalPrices?.[currentWeight];
+              const disc = calcDiscount(origPrice, currentPrice);
+
+              return (
+                <div key={product.id} className="product-item" onClick={() => navigate(`/products/${product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${product.id}`)}>
                   <div className="product-image-container">
-                    {badge && <span className={`product-badge ${badge}`}>{badgeLabels[badge] || badge}</span>}
-                    <img src={product.images[0]} alt={product.name} onClick={() => setSelectedProduct(product)} />
+                    {product.tag && <span className={`product-badge ${product.tag}`}>{TAG_LABELS[product.tag] || product.tag}</span>}
+                    {disc && <span className="product-disc-badge">-{disc}%</span>}
+                    <img src={product.images[0]} alt={product.name} />
                     <div className="quick-view-overlay">
-                      <button className="quick-view-btn" onClick={() => setSelectedProduct(product)}>Quick View</button>
+                      <button className="quick-view-btn">View Details</button>
                     </div>
                   </div>
                   <div className="product-info">
+                    <span className="product-cat-label">{product.category}</span>
                     <h3>{product.name}</h3>
-                    <div className="product-rating">
-                      <span>4.5</span>
-                    </div>
-                    <div className="product-tags">
-                      <span className="product-tag">✨ Fresh Today</span>
-                    </div>
+                    {/* <div className="product-rating"><MdStar /><MdStar /><MdStar /><MdStar /><MdStar /><span>4.5</span></div> */}
                     <p>{product.description || ''}</p>
-                    <div className="product-details">
-                      <select 
+                    <div className="product-details" onClick={e => e.stopPropagation()}>
+                      <select
                         className="grams-dropdown"
                         value={currentWeight}
-                        onChange={(e) => {
-                          const newWeight = e.target.value;
-                          setSelectedWeights({...selectedWeights, [product.id]: newWeight});
-                        }}
-                        onClick={(e) => e.stopPropagation()}
+                        onChange={e => setSelectedWeights({ ...selectedWeights, [product.id]: e.target.value })}
                       >
-                        {Array.isArray(product.grams) ? product.grams.map((gram, idx) => (
-                          <option key={idx} value={gram}>{gram}</option>
-                        )) : <option value={product.grams}>{product.grams}</option>}
+                        {Array.isArray(product.grams)
+                          ? product.grams.map((g, i) => <option key={i} value={g}>{g}</option>)
+                          : <option value={product.grams}>{product.grams}</option>}
                       </select>
                       <div className="price-section">
+                        {origPrice && Number(origPrice) > Number(currentPrice) && (
+                          <span className="original-price">₹{origPrice}</span>
+                        )}
                         <span className="price">₹{currentPrice}</span>
+                        {disc && <span className="discount-badge">-{disc}%</span>}
                       </div>
                     </div>
-                    {!isInCart(product.id, currentWeight) ? (
-                      <button className="add-to-cart" onClick={() => addToCart(product.id, currentWeight)}>
-                        Add to Cart
-                      </button>
-                    ) : (
-                      <div className="quantity-control">
-                        <button onClick={() => updateQuantity(product.id, currentWeight, -1)}>-</button>
-                        <span>{getCartQuantity(product.id, currentWeight)}</span>
-                        <button onClick={() => updateQuantity(product.id, currentWeight, 1)}>+</button>
-                      </div>
-                    )}
+                    <div onClick={e => e.stopPropagation()}>
+                      {!isInCart(product.id, currentWeight) ? (
+                        <button className="add-to-cart" onClick={() => addToCart(product.id, currentWeight)}>
+                          Add to Cart
+                        </button>
+                      ) : (
+                        <div className="quantity-control">
+                          <button onClick={() => updateQuantity(product.id, currentWeight, -1)}>−</button>
+                          <span>{getCartQuantity(product.id, currentWeight)}</span>
+                          <button onClick={() => updateQuantity(product.id, currentWeight, 1)}>+</button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              )}
-              )
-            )}
+              );
+            })}
           </div>
         </div>
       )}
 
+      {/* Checkout Modal */}
       {showCheckout && (
         <div className="modal-overlay" onClick={() => setShowCheckout(false)}>
-          <div className="modal-content checkout-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content checkout-modal" onClick={e => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setShowCheckout(false)}>&times;</button>
             <h2>Order Summary</h2>
-            <div className="delivery-notice">
-              <h3>📢 Delivery Information</h3>
-              <ul>
-                <li>✓ Minimum order value: ₹500</li>
-                <li>✓ Free delivery within 5km radius</li>
-                <li>✓ Delivery available in: రంగాపురం, ములగలంపాడు, బోగోలు, ముడిచెర్ల, వేములపల్లి, కొత్తపల్లి, K గోకవరం, గొల్లగూడెం, పుప్పాల వారి గూడెం</li>
-              </ul>
-            </div>
             <div className="checkout-items">
               {cartItems.map(item => (
-                <div key={item.id} className="checkout-item">
+                <div key={`${item.id}-${item.selectedWeight}`} className="checkout-item">
                   <img src={item.images[0]} alt={item.name} />
                   <div>
                     <h4>{item.name}</h4>
-                    <p>{item.selectedWeight} x {item.quantity} = ₹{item.selectedPrice * item.quantity}</p>
+                    <p>{item.selectedWeight} × {item.quantity} = ₹{item.selectedPrice * item.quantity}</p>
                   </div>
                 </div>
               ))}
               <div className="checkout-total">Total: ₹{total}</div>
             </div>
             <div className="checkout-form">
-              <input type="text" placeholder="Name *" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
-              <input type="tel" placeholder="Phone *" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} />
-              <input type="email" placeholder="Email *" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
-              <textarea placeholder="Address *" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} />
+              <input type="text" placeholder="Name *" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+              <input type="tel" placeholder="Phone *" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+              <input type="email" placeholder="Email *" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+              <textarea placeholder="Address *" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
               <button className="whatsapp-btn" onClick={handleCheckout} disabled={!formData.name || !formData.phone || !formData.email || !formData.address}>
-                Order via WhatsApp
+                💬 Order via WhatsApp
               </button>
             </div>
           </div>
         </div>
       )}
-
-      {selectedProduct && (() => {
-        const defaultWeight = Array.isArray(selectedProduct.grams) ? selectedProduct.grams[0] : selectedProduct.grams;
-        const modalWeight = selectedWeights[`modal-${selectedProduct.id}`] !== undefined ? selectedWeights[`modal-${selectedProduct.id}`] : defaultWeight;
-        const modalPrice = selectedProduct.prices?.[modalWeight] || selectedProduct.price || 0;
-        
-        return (
-        <div className="modal-overlay" onClick={() => setSelectedProduct(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setSelectedProduct(null)}>&times;</button>
-            <Slider {...sliderSettings} className="modal-slider">
-              {selectedProduct.images.map((img, index) => (
-                <div key={index}>
-                  <img src={img} alt={`${selectedProduct.name} ${index + 1}`} />
-                </div>
-              ))}
-            </Slider>
-            <h2>{selectedProduct.name}</h2>
-            <p className="description">{selectedProduct.description}</p>
-            <div className="product-details">
-              <select 
-                className="grams-dropdown"
-                value={modalWeight}
-                onChange={(e) => {
-                  const newWeight = e.target.value;
-                  setSelectedWeights({...selectedWeights, [`modal-${selectedProduct.id}`]: newWeight});
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {Array.isArray(selectedProduct.grams) ? selectedProduct.grams.map((gram, idx) => (
-                  <option key={idx} value={gram}>{gram}</option>
-                )) : <option value={selectedProduct.grams}>{selectedProduct.grams}</option>}
-              </select>
-              <span className="price">₹{modalPrice}</span>
-            </div>
-            {!isInCart(selectedProduct.id, modalWeight) ? (
-              <button className="add-to-cart" onClick={() => addToCart(selectedProduct.id, modalWeight)}>
-                Add to Cart
-              </button>
-            ) : (
-              <div className="quantity-control">
-                <button onClick={() => updateQuantity(selectedProduct.id, modalWeight, -1)}>-</button>
-                <span>{getCartQuantity(selectedProduct.id, modalWeight)}</span>
-                <button onClick={() => updateQuantity(selectedProduct.id, modalWeight, 1)}>+</button>
-              </div>
-            )}
-          </div>
-        </div>
-        );
-      })()}
     </div>
   );
 };

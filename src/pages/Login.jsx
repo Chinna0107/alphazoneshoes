@@ -3,30 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import logo from '../assets/logo2.jpeg';
 import config from '../config';
 import './Login.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
     try {
-      const response = await axios.post(`${config.API_URL}/api/users/login`, {
-        email,
-        password
-      });
-      
+      const response = await axios.post(`${config.API_URL}/api/users/login`, { email, password });
       if (response.data.success && response.data.token) {
-        console.log('User ID:', response.data.user.id);
-        console.log('Email:', response.data.user.email);
-        console.log('Token:', response.data.token);
-        
         localStorage.setItem('user', JSON.stringify(response.data.user));
         localStorage.setItem('token', response.data.token);
         toast.success('Login successful!');
@@ -36,52 +29,97 @@ const Login = () => {
         setLoading(false);
       }
     } catch (error) {
-      console.error('Login failed:', error);
       toast.error(error.response?.data?.message || 'Login failed. Please try again.');
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-container">
+    <div className="login-page">
       <ToastContainer position="top-right" autoClose={3000} />
-      <div className="login-box">
-        <div className="login-logo">
-          <img src="https://res.cloudinary.com/dgyykbmt6/image/upload/v1772460868/cm3_zvfuyu.jpg" alt="CM Mart" />
+
+      {/* Animated background orbs */}
+      <div className="orb orb-1" />
+      <div className="orb orb-2" />
+      <div className="orb orb-3" />
+
+      <div className="login-card">
+        {/* Left panel */}
+        <div className="login-left">
+          <div className="login-left-content">
+            <img src={logo} alt="AlphaZOne" className="login-logo" />
+            <h1><span className="l-alpha">Alpha</span><span className="l-zone">ZOne</span></h1>
+            <p>Your premium fashion destination for sandals, shoes, slippers, tshirts & night pants.</p>
+            <div className="login-features">
+              <div className="lf-item"><span>👟</span> Premium Footwear</div>
+              <div className="lf-item"><span>👕</span> Trendy Apparel</div>
+              <div className="lf-item"><span>🚚</span> Fast Delivery</div>
+              <div className="lf-item"><span>✅</span> Quality Assured</div>
+            </div>
+          </div>
         </div>
-        <h2>Welcome Back</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="email"></label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              required
-            />
+
+        {/* Right panel */}
+        <div className="login-right">
+          <div className="login-form-wrap">
+            <div className="login-header">
+              <h2>Admin Login</h2>
+              <p>Sign in to manage your store</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="login-form">
+              <div className="field-group">
+                <label>Email Address</label>
+                <div className="input-wrap">
+                  <span className="input-icon">✉️</span>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="admin@alphazone.com"
+                    required
+                    autoComplete="email"
+                  />
+                </div>
+              </div>
+
+              <div className="field-group">
+                <label>Password</label>
+                <div className="input-wrap">
+                  <span className="input-icon">🔒</span>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    required
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    className="toggle-pw"
+                    onClick={() => setShowPassword(!showPassword)}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? '🙈' : '👁️'}
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" className="login-btn" disabled={loading}>
+                {loading ? (
+                  <><span className="spinner" /> Signing in...</>
+                ) : (
+                  <><span>🔑</span> Sign In</>
+                )}
+              </button>
+            </form>
+
+            <div className="login-footer">
+              <span>AlphaZOne Admin Panel</span>
+            </div>
           </div>
-          <div className="form-group">
-            <label htmlFor="password"></label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-            />
-          </div>
-          <button type="submit" className="login-btn" disabled={loading}>
-            {loading ? (
-              <>
-                <span className="spinner"></span>
-                Logging in...
-              </>
-            ) : 'Login'}
-          </button>
-        </form>
+        </div>
       </div>
     </div>
   );
