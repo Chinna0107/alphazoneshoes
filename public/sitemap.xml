@@ -6,7 +6,7 @@
 
   <!-- Home Page -->
   <url>
-    <loc>https://thealphazone.com/</loc>
+    <loc>https://thealphazone.in/</loc>
     <lastmod>2026-01-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
@@ -14,7 +14,7 @@
 
   <!-- Products Page -->
   <url>
-    <loc>https://thealphazone.com/products</loc>
+    <loc>https://thealphazone.in/products</loc>
     <lastmod>2026-01-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
@@ -22,7 +22,7 @@
 
   <!-- About Page -->
   <url>
-    <loc>https://thealphazone.com/about</loc>
+    <loc>https://thealphazone.in/about</loc>
     <lastmod>2026-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -30,7 +30,7 @@
 
   <!-- Checkout Page -->
   <url>
-    <loc>https://thealphazone.com/checkout</loc>
+    <loc>https://thealphazone.in/checkout</loc>
     <lastmod>2026-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -38,7 +38,7 @@
 
   <!-- Contact Page -->
   <url>
-    <loc>https://thealphazone.com/contact</loc>
+    <loc>https://thealphazone.in/contact</loc>
     <lastmod>2026-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -46,7 +46,7 @@
 
   <!-- FAQ Page -->
   <url>
-    <loc>https://thealphazone.com/faq</loc>
+    <loc>https://thealphazone.in/faq</loc>
     <lastmod>2026-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -54,7 +54,7 @@
 
   <!-- Privacy Policy -->
   <url>
-    <loc>https://thealphazone.com/privacy-policy</loc>
+    <loc>https://thealphazone.in/privacy-policy</loc>
     <lastmod>2026-01-15</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
@@ -62,7 +62,7 @@
 
   <!-- Shipping Policy -->
   <url>
-    <loc>https://thealphazone.com/shipping-policy</loc>
+    <loc>https://thealphazone.in/shipping-policy</loc>
     <lastmod>2026-01-15</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
@@ -70,7 +70,7 @@
 
   <!-- Refund Policy -->
   <url>
-    <loc>https://thealphazone.com/refund-policy</loc>
+    <loc>https://thealphazone.in/refund-policy</loc>
     <lastmod>2026-01-15</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
@@ -78,7 +78,7 @@
 
   <!-- Terms & Conditions -->
   <url>
-    <loc>https://thealphazone.com/terms</loc>
+    <loc>https://thealphazone.in/terms</loc>
     <lastmod>2026-01-15</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
