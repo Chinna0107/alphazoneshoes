@@ -38,7 +38,7 @@ const Products = () => {
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [maxPrice, setMaxPrice] = useState(10000);
   const [selectedWeights, setSelectedWeights] = useState({});
-  const { cart, addToCart, updateQuantity, getCartCount, isInCart, getCartQuantity } = useCart();
+  const { cart, addToCart, updateQuantity, getCartCount, isInCart, getCartQuantity, cacheProducts } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -57,6 +57,7 @@ const Products = () => {
       const list = res.data.success ? res.data.products : Array.isArray(res.data) ? res.data : [];
       setAllProducts(list);
       setCategories(['All', ...new Set(list.map(p => p.category))]);
+      cacheProducts(list);
       const prices = list.flatMap(p => p.prices ? Object.values(p.prices).map(Number) : [p.price || 0]);
       const max = Math.max(...prices, 1000);
       setMaxPrice(max);

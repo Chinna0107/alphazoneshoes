@@ -4,14 +4,21 @@ const CartContext = createContext();
 
 export const useCart = () => {
   const context = useContext(CartContext);
-  if (!context) {
-    throw new Error('useCart must be used within CartProvider');
-  }
+  if (!context) throw new Error('useCart must be used within CartProvider');
   return context;
 };
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState({});
+  const [productsCache, setProductsCache] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('az_products') || '[]'); }
+    catch { return []; }
+  });
+
+  const cacheProducts = (list) => {
+    setProductsCache(list);
+    try { localStorage.setItem('az_products', JSON.stringify(list)); } catch { /* silent */ }
+  };
 
   const addToCart = (productId, weight) => {
     const cartKey = `${productId}-${weight}`;
@@ -63,7 +70,7 @@ export const CartProvider = ({ children }) => {
   };
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, updateQuantity, clearCart, getCartCount, isInCart, getCartQuantity }}>
+    <CartContext.Provider value={{ cart, addToCart, updateQuantity, clearCart, getCartCount, isInCart, getCartQuantity, productsCache, cacheProducts }}>
       {children}
     </CartContext.Provider>
   );

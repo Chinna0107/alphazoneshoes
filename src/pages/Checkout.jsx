@@ -19,18 +19,21 @@ const loadRazorpay = () =>
   });
 
 const Checkout = () => {
-  const { cart, updateQuantity, clearCart } = useCart();
+  const { cart, updateQuantity, clearCart, productsCache, cacheProducts } = useCart();
   const navigate = useNavigate();
-  const [allProducts, setAllProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState(productsCache);
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', address: '' });
   const [placing, setPlacing] = useState(false);
-  const [payMethod, setPayMethod] = useState('razorpay'); // 'razorpay' | 'whatsapp'
+  const [payMethod, setPayMethod] = useState('razorpay');
   const [orderDone, setOrderDone] = useState(false);
 
   useEffect(() => {
     axios.get(`${config.API_URL}/api/products`)
-      .then(res => setAllProducts(res.data.success ? res.data.products : Array.isArray(res.data) ? res.data : []))
+      .then(res => {
+        const list = res.data.success ? res.data.products : Array.isArray(res.data) ? res.data : [];
+        if (list.length) { setAllProducts(list); cacheProducts(list); }
+      })
       .catch(() => {});
   }, []);
 
