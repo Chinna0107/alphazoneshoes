@@ -47,8 +47,8 @@ const Login = () => {
         {/* Left panel */}
         <div className="login-left">
           <div className="login-left-content">
-            <img src={logo} alt="AlphaZOne" className="login-logo" />
-            <h1><span className="l-alpha">Alpha</span><span className="l-zone">ZOne</span></h1>
+            <img src={logo} alt="TheAlphaZone" className="login-logo" />
+            <h1><span className="l-alpha">TheAlpha</span><span className="l-zone">Zone</span></h1>
             <p>Your premium fashion destination for sandals, shoes, slippers, tshirts & night pants.</p>
             <div className="login-features">
               <div className="lf-item"><span>👟</span> Premium Footwear</div>
@@ -76,7 +76,7 @@ const Login = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@alphazone.com"
+                    placeholder="admin@thealphazone.com"
                     required
                     autoComplete="email"
                   />
@@ -116,7 +116,7 @@ const Login = () => {
             </form>
 
             <div className="login-footer">
-              <span>AlphaZOne Admin Panel</span>
+              <span>TheAlphaZone Admin Panel</span>
             </div>
           </div>
         </div>

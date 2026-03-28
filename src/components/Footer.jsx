@@ -5,8 +5,8 @@ const Footer = () => (
   <footer className="footer">
     <div className="footer-content">
       <div className="footer-section">
-        <h3><span className="f-alpha">Alpha</span><span className="f-zone">ZOne</span></h3>
-        <p>AlphaZOne is your premium fashion destination for sandals, shoes, slippers, tshirts & night pants — style that moves with you.</p>
+        <h3><span className="f-alpha">TheAlpha</span><span className="f-zone">Zone</span></h3>
+        <p>TheAlphaZone is your premium fashion destination for sandals, shoes, slippers, tshirts & night pants — style that moves with you.</p>
       </div>
       <div className="footer-section">
         <h4>Quick Links</h4>
@@ -24,8 +24,17 @@ const Footer = () => (
         </ul>
       </div>
       <div className="footer-section">
+        <h4>Policies</h4>
+        <ul>
+          <li><Link to="/privacy-policy">Privacy Policy</Link></li>
+          <li><Link to="/shipping-policy">Shipping Policy</Link></li>
+          <li><Link to="/refund-policy">Refund Policy</Link></li>
+          <li><Link to="/terms">Terms &amp; Conditions</Link></li>
+        </ul>
+      </div>
+      <div className="footer-section">
         <h4>Follow Us</h4>
-        <p className="social-tagline">Stay connected with AlphaZOne</p>
+        <p className="social-tagline">Stay connected with TheAlphaZone</p>
         <div className="social-icons">
 
           <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="social-link instagram" title="Instagram">
@@ -68,8 +77,8 @@ const Footer = () => (
       </div>
     </div>
     <div className="footer-bottom">
-      <p>© 2026 AlphaZOne. All rights reserved.</p>
-      <p>Made with ❤️ by <a href="https://staffarc.in" target="_blank" rel="noopener noreferrer">StaffArc</a></p>
+      <p>© 2026 TheAlphaZone. All rights reserved.</p>
+      <p>Made with <b>passion</b> by <a href="https://zewo.in" target="_blank" rel="noopener noreferrer">Zewo</a></p>
     </div>
   </footer>
 );

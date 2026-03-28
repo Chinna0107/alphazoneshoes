@@ -23,9 +23,9 @@ const Header = () => {
     <header className="header glass-header">
       <div className="logo">
         <Link to="/">
-          <img src={logo} alt="AlphaZone" className="logo-img" />
+          <img src={logo} alt="TheAlphaZone" className="logo-img" />
           <span className="brand-name">
-            <span className="brand-alpha">Alpha</span><span className="brand-zone">Zone</span>
+            <span className="brand-alpha">TheAlpha</span><span className="brand-zone">Zone</span>
           </span>
         </Link>
       </div>

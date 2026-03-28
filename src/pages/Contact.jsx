@@ -30,11 +30,11 @@ const Contact = () => {
             </div>
             <div className="info-item">
               <h3>📧 Email</h3>
-              <p>alphazone@gmail.com</p>
+              <p>thealphazone@gmail.com</p>
             </div>
             <div className="info-item">
               <h3>📍 Address</h3>
-              <p>AlphaZOne Fashion Store<br />Rangapuram Main Road<br />Sangareddy - 502001</p>
+              <p>TheAlphaZone Fashion Store<br />Rangapuram Main Road<br />Sangareddy - 502001</p>
             </div>
             <div className="info-item">
               <h3>🕐 Business Hours</h3>

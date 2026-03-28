@@ -14,13 +14,13 @@ const CATEGORIES = [
   { name: 'Shoes', icon: '👟', desc: 'Premium footwear for all lifestyles' },
   { name: 'Slippers', icon: '🩴', desc: 'Comfortable home & casual slippers' },
   { name: 'T-Shirts', icon: '👕', desc: 'Trendy tees for every mood' },
-  { name: 'Night Pants', icon: '🩲', desc: 'Ultra-soft sleep & lounge wear' },
+  { name: 'Night Pants', icon: null, img: 'https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=200&h=200&fit=crop', desc: 'Ultra-soft sleep & lounge wear' },
 ];
 
 const SLIDES = [
   { id: 1, imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1200&h=500&fit=crop', title: 'Step Into Style' },
   { id: 2, imageUrl: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1200&h=500&fit=crop', title: 'Fashion Forward' },
-  { id: 3, imageUrl: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=1200&h=500&fit=crop', title: 'Comfort Meets Style' },
+  { id: 3, imageUrl: 'https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=1200&h=500&fit=crop', title: 'Comfort Meets Style' },
 ];
 
 const Home = () => {
@@ -76,7 +76,7 @@ const Home = () => {
                   <img src={s.imageUrl} alt={s.title} />
                   <div className="slide-overlay">
                     <div className="slide-text glass">
-                      <h1>Welcome to <span className="brand-alpha">Alpha</span><span className="brand-zone">ZOne</span></h1>
+                      <h1>Welcome to <span className="brand-alpha">TheAlpha</span><span className="brand-zone">Zone</span></h1>
                       <p>Fashion that defines you</p>
                       <button className="hero-btn" onClick={() => navigate('/products')}>Shop Now →</button>
                     </div>
@@ -92,7 +92,10 @@ const Home = () => {
             <div className="categories-grid">
               {CATEGORIES.map(cat => (
                 <div key={cat.name} className="cat-card glass" onClick={() => navigate('/products', { state: { category: cat.name } })}>
-                  <span className="cat-icon">{cat.icon}</span>
+                  {cat.img
+                    ? <img src={cat.img} alt={cat.name} className="cat-img" />
+                    : <span className="cat-icon">{cat.icon}</span>
+                  }
                   <h3>{cat.name}</h3>
                   <p>{cat.desc}</p>
                   <span className="cat-arrow">→</span>
@@ -146,7 +149,7 @@ const Home = () => {
 
           {/* Why Choose Us */}
           <section className="features-section">
-            <h2 className="section-title">Why AlphaZOne?</h2>
+            <h2 className="section-title">Why TheAlphaZone?</h2>
             <div className="features-grid">
               {[
                 { icon: <MdVerified />, title: 'Premium Quality', desc: 'Every product is quality-checked before dispatch' },
@@ -225,9 +228,9 @@ const Home = () => {
             <h2 className="section-title">⭐ What Customers Say</h2>
             <div className="testimonials-grid">
               {[
-                { name: 'Rahul M.', role: 'Regular Customer', text: '"AlphaZOne has the best sandals! Super comfortable and stylish. Highly recommend!"', init: 'R' },
+                { name: 'Rahul M.', role: 'Regular Customer', text: '"TheAlphaZone has the best sandals! Super comfortable and stylish. Highly recommend!"', init: 'R' },
                 { name: 'Priya S.', role: 'Fashion Lover', text: '"Ordered tshirts and night pants — amazing quality and fast delivery. Love it!"', init: 'P' },
-                { name: 'Arjun K.', role: 'Happy Customer', text: '"Best shoes at this price range. Will definitely order again from AlphaZOne!"', init: 'A' },
+                { name: 'Arjun K.', role: 'Happy Customer', text: '"Best shoes at this price range. Will definitely order again from TheAlphaZone!"', init: 'A' },
               ].map((t, i) => (
                 <div key={i} className="testimonial-card glass">
                   <div className="t-stars">{[...Array(5)].map((_, j) => <MdStar key={j} />)}</div>
@@ -245,7 +248,7 @@ const Home = () => {
           <section className="cta-section">
             <div className="cta-glass glass">
               <h2>Ready to Upgrade Your Style? 👟</h2>
-              <p>Shop the latest fashion at AlphaZOne</p>
+              <p>Shop the latest fashion at TheAlphaZone</p>
               <div className="cta-btns">
                 <button className="cta-call" onClick={() => window.location.href = 'tel:+919100009907'}>📞 Call Us</button>
                 <button className="cta-shop" onClick={() => navigate('/products')}>🛍️ Shop Now</button>

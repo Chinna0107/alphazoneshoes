@@ -1,15 +1,15 @@
-# CM Super Mart - Robots.txt
-# Allow all search engines to crawl the site
+# TheAlphaZone - robots.txt
+# https://thealphazone.com
 
 User-agent: *
 Allow: /
 
-# Disallow admin or private areas (if any)
+# Disallow admin and private routes
 Disallow: /admin/
-Disallow: /private/
+Disallow: /login
+
+# Disallow checkout (no SEO value)
+Disallow: /checkout
 
 # Sitemap location
-Sitemap: https://cmsupermart.com/sitemap.xml
-
-# Crawl-delay (optional, helps prevent server overload)
-Crawl-delay: 1
+Sitemap: https://thealphazone.com/sitemap.xml

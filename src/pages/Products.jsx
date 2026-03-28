@@ -32,25 +32,19 @@ const Products = () => {
   const [allProducts, setAllProducts] = useState([]);
   const [categories, setCategories] = useState(['All']);
   const [loading, setLoading] = useState(true);
-  const [showCheckout, setShowCheckout] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [sortBy, setSortBy] = useState('default');
   const [selectedTags, setSelectedTags] = useState([]);
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [maxPrice, setMaxPrice] = useState(10000);
-  const [formData, setFormData] = useState({ name: '', phone: '', email: '', address: '' });
   const [selectedWeights, setSelectedWeights] = useState({});
-  const { cart, addToCart, updateQuantity, clearCart, getCartCount, isInCart, getCartQuantity } = useCart();
+  const { cart, addToCart, updateQuantity, getCartCount, isInCart, getCartQuantity } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => { fetchProducts(); }, []);
 
   useEffect(() => {
-    if (location.state?.openCheckout && getCartCount() > 0) {
-      setShowCheckout(true);
-      window.history.replaceState({}, document.title);
-    }
     if (location.state?.category) {
       setSelectedCategory(location.state.category);
       window.history.replaceState({}, document.title);
@@ -103,26 +97,6 @@ const Products = () => {
       return 0;
     });
 
-  const cartItems = Object.values(cart).map(item => {
-    const product = allProducts.find(p => p.id === item.productId);
-    if (!product) return null;
-    const price = product.prices?.[item.weight] || product.price || 0;
-    return { ...product, quantity: item.quantity, selectedWeight: item.weight, selectedPrice: price };
-  }).filter(Boolean);
-
-  const total = cartItems.reduce((sum, item) => sum + (item.selectedPrice * item.quantity), 0);
-
-  const handleCheckout = () => {
-    const orderDetails = cartItems.map(item =>
-      `${item.name} (${item.selectedWeight}) x ${item.quantity} = ₹${item.selectedPrice * item.quantity}`
-    ).join('%0A');
-    const message = `*New Order from AlphaZOne*%0A%0A*Customer Details:*%0AName: ${formData.name}%0APhone: ${formData.phone}%0AEmail: ${formData.email}%0AAddress: ${formData.address}%0A%0A*Order Details:*%0A${orderDetails}%0A%0A*Total: ₹${total}*`;
-    window.open(`https://wa.me/919100009907?text=${message}`, '_blank');
-    clearCart();
-    setShowCheckout(false);
-    setFormData({ name: '', phone: '', email: '', address: '' });
-  };
-
   const activeFiltersCount = selectedTags.length + (sortBy !== 'default' ? 1 : 0) + (priceRange[1] < maxPrice ? 1 : 0);
 
   return (
@@ -150,7 +124,7 @@ const Products = () => {
             {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
           {getCartCount() > 0 && (
-            <button className="checkout-btn-top" onClick={() => setShowCheckout(true)}>
+            <button className="checkout-btn-top" onClick={() => navigate('/checkout')}>
               🛒 Checkout ({getCartCount()})
             </button>
           )}
@@ -281,36 +255,7 @@ const Products = () => {
         </div>
       )}
 
-      {/* Checkout Modal */}
-      {showCheckout && (
-        <div className="modal-overlay" onClick={() => setShowCheckout(false)}>
-          <div className="modal-content checkout-modal" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowCheckout(false)}>&times;</button>
-            <h2>Order Summary</h2>
-            <div className="checkout-items">
-              {cartItems.map(item => (
-                <div key={`${item.id}-${item.selectedWeight}`} className="checkout-item">
-                  <img src={item.images[0]} alt={item.name} />
-                  <div>
-                    <h4>{item.name}</h4>
-                    <p>{item.selectedWeight} × {item.quantity} = ₹{item.selectedPrice * item.quantity}</p>
-                  </div>
-                </div>
-              ))}
-              <div className="checkout-total">Total: ₹{total}</div>
-            </div>
-            <div className="checkout-form">
-              <input type="text" placeholder="Name *" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
-              <input type="tel" placeholder="Phone *" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
-              <input type="email" placeholder="Email *" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
-              <textarea placeholder="Address *" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
-              <button className="whatsapp-btn" onClick={handleCheckout} disabled={!formData.name || !formData.phone || !formData.email || !formData.address}>
-                💬 Order via WhatsApp
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };

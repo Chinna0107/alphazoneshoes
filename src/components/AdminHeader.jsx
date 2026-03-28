@@ -18,9 +18,9 @@ const AdminHeader = () => {
   return (
     <header className="admin-header">
       <div className="admin-header-left">
-        <img src={logo} alt="AlphaZOne" className="admin-logo" />
+        <img src={logo} alt="TheAlphaZone" className="admin-logo" />
         <div className="admin-brand">
-          <span className="ab-alpha">Alpha</span><span className="ab-zone">ZOne</span>
+          <span className="ab-alpha">TheAlpha</span><span className="ab-zone">Zone</span>
           <span className="ab-tag">Admin</span>
         </div>
       </div>

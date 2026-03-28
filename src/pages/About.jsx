@@ -4,7 +4,7 @@ const About = () => (
   <div className="about-page">
     <div className="about-hero">
       <div className="about-hero-content glass">
-        <h1><span className="a-alpha">Alpha</span><span className="a-zone">ZOne</span></h1>
+        <h1><span className="a-alpha">TheAlpha</span><span className="a-zone">Zone</span></h1>
         <p>Your premium fashion destination for footwear & apparel</p>
       </div>
     </div>
@@ -12,9 +12,9 @@ const About = () => (
     <div className="about-container">
       <div className="about-story glass">
         <h2>Our Story</h2>
-        <p>Welcome to <strong>AlphaZOne</strong> — where fashion meets comfort. We started with a simple mission: to bring premium quality sandals, shoes, slippers, tshirts, and night pants to everyone at prices that make sense.</p>
-        <p>From trendy sneakers to ultra-soft night pants, every product at AlphaZOne is carefully curated to ensure you look great and feel even better. We believe fashion should be accessible, comfortable, and expressive.</p>
-        <p>Whether you're stepping out in style or lounging at home, AlphaZOne has you covered — head to toe.</p>
+        <p>Welcome to <strong>TheAlphaZone</strong> — where fashion meets comfort. We started with a simple mission: to bring premium quality sandals, shoes, slippers, tshirts, and night pants to everyone at prices that make sense.</p>
+        <p>From trendy sneakers to ultra-soft night pants, every product at TheAlphaZone is carefully curated to ensure you look great and feel even better. We believe fashion should be accessible, comfortable, and expressive.</p>
+        <p>Whether you're stepping out in style or lounging at home, TheAlphaZone has you covered — head to toe.</p>
       </div>
 
       <div className="about-features">

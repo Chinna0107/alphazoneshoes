@@ -14,6 +14,7 @@ import NotFound from './pages/NotFound'
 import Contact from './pages/Contact'
 import FAQ from './pages/FAQ'
 import About from './pages/About'
+import Policies from './pages/Policies'
 import './App.css'
 
 function ScrollToTop() {
@@ -43,6 +44,10 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/about" element={<About />} />
+          <Route path="/privacy-policy" element={<Policies />} />
+          <Route path="/shipping-policy" element={<Policies />} />
+          <Route path="/refund-policy" element={<Policies />} />
+          <Route path="/terms" element={<Policies />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
