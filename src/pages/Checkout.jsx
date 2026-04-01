@@ -214,7 +214,7 @@ const Checkout = () => {
             <div className="co-success-msg glass">
               <p>🚚 Your order will be delivered within <strong>2–3 business days</strong>.</p>
               <p>📞 Our team will call you at <strong>{orderDetails.customer.phone}</strong> to confirm.</p>
-              <p>For any queries, reach us on WhatsApp at <strong>+91 8885553241</strong>.</p>
+              <p>For any queries, reach us on WhatsApp at <strong>+91 8885553249</strong>.</p>
             </div>
 
             <button className="co-success-shop-btn" onClick={() => navigate('/products')}>
