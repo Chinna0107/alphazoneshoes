@@ -10,6 +10,7 @@ import ProductDetail from './pages/ProductDetail'
 import Checkout from './pages/Checkout'
 import AdminProducts from './pages/AdminProducts'
 import AdminSliders from './pages/AdminSliders'
+import AdminOrders from './pages/AdminOrders'
 import NotFound from './pages/NotFound'
 import Contact from './pages/Contact'
 import FAQ from './pages/FAQ'
@@ -40,6 +41,7 @@ function App() {
           <Route path="/products/:slug" element={<ProductDetail />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/admin/products" element={<AdminProducts />} />
+          <Route path="/admin/orders" element={<AdminOrders />} />
           <Route path="/admin/sliders" element={<AdminSliders />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/faq" element={<FAQ />} />

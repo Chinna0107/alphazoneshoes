@@ -6,6 +6,7 @@ import Slider from 'react-slick';
 import { MdStar, MdLocalShipping, MdVerified, MdPayment, MdPhone, MdShoppingCart, MdMessage } from 'react-icons/md';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
+import useProducts from '../hooks/useProducts';
 import config from '../config';
 import './Home.css';
 
@@ -24,7 +25,7 @@ const SLIDES = [
 ];
 
 const Home = () => {
-  const [products, setProducts] = useState([]);
+  const { products } = useProducts();
   const [sliders, setSliders] = useState(SLIDES);
   const [selectedWeights, setSelectedWeights] = useState({});
   const [loading, setLoading] = useState(true);
@@ -38,16 +39,8 @@ const Home = () => {
   };
 
   useEffect(() => {
-    fetchProducts();
     fetchSliders();
   }, []);
-
-  const fetchProducts = async () => {
-    try {
-      const res = await axios.get(`${config.API_URL}/api/products`);
-      setProducts(res.data.success ? res.data.products : Array.isArray(res.data) ? res.data : []);
-    } catch { /* silent */ }
-  };
 
   const fetchSliders = async () => {
     setLoading(false);

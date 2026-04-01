@@ -1,13 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import axios from 'axios';
 import {
   MdStar, MdStarHalf, MdLocalShipping, MdVerified,
   MdArrowBack, MdShare, MdFavorite, MdFavoriteBorder,
   MdZoomIn, MdCheckCircle, MdSwapHoriz
 } from 'react-icons/md';
-import config from '../config';
+import useProducts from '../hooks/useProducts';
 import './ProductDetail.css';
 
 const TAG_LABELS = {
@@ -30,9 +29,8 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const id = slug?.split('-').pop();
 
+  const { products: allProducts, loading } = useProducts();
   const [product, setProduct] = useState(null);
-  const [allProducts, setAllProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState('');
   const [activeImg, setActiveImg] = useState(0);
   const [zoomed, setZoomed] = useState(false);
@@ -45,21 +43,13 @@ const ProductDetail = () => {
   const { addToCart, updateQuantity, isInCart, getCartQuantity } = useCart();
 
   useEffect(() => {
-    const fetch = async () => {
-      try {
-        const res = await axios.get(`${config.API_URL}/api/products`);
-        const list = res.data.success ? res.data.products : Array.isArray(res.data) ? res.data : [];
-        setAllProducts(list);
-        const found = list.find(p => String(p.id) === String(id));
-        if (found) {
-          setProduct(found);
-          setSelectedSize(Array.isArray(found.grams) ? found.grams[0] : found.grams || '');
-        }
-      } catch { /* silent */ }
-      finally { setLoading(false); }
-    };
-    fetch();
-  }, [id]);
+    if (!allProducts.length) return;
+    const found = allProducts.find(p => String(p.id) === String(id));
+    if (found) {
+      setProduct(found);
+      setSelectedSize(Array.isArray(found.grams) ? found.grams[0] : found.grams || '');
+    }
+  }, [allProducts, id]);
 
   const handleMouseMove = (e) => {
     if (!imgRef.current) return;

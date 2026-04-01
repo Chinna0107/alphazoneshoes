@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useCart } from '../context/CartContext';
 import { useLocation, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { MdStar, MdFilterList, MdClose, MdSearch } from 'react-icons/md';
-import config from '../config';
+import { MdFilterList, MdClose, MdSearch } from 'react-icons/md';
+import useProducts from '../hooks/useProducts';
 import './Products.css';
 
 const CATEGORY_ICONS = { All: '🛍️', Sandals: '👡', Shoes: '👟', Slippers: '🩴', 'T-Shirts': '👕', 'Track Pants': '🩲' };
@@ -26,24 +25,46 @@ const calcDiscount = (orig, sale) => {
   return Math.round(((o - s) / o) * 100);
 };
 
+const getMinPrice = (product) => {
+  if (product.prices && typeof product.prices === 'object')
+    return Math.min(...Object.values(product.prices).map(Number));
+  return product.price || 0;
+};
+
 const Products = () => {
+  const { products, loading, error } = useProducts();
+  const { addToCart, updateQuantity, getCartCount, isInCart, getCartQuantity } = useCart();
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
-  const [allProducts, setAllProducts] = useState([]);
-  const [categories, setCategories] = useState(['All']);
-  const [loading, setLoading] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [sortBy, setSortBy] = useState('default');
   const [selectedTags, setSelectedTags] = useState([]);
   const [priceRange, setPriceRange] = useState([0, 10000]);
-  const [maxPrice, setMaxPrice] = useState(10000);
   const [selectedWeights, setSelectedWeights] = useState({});
-  const { cart, addToCart, updateQuantity, getCartCount, isInCart, getCartQuantity, cacheProducts } = useCart();
-  const location = useLocation();
-  const navigate = useNavigate();
 
-  useEffect(() => { fetchProducts(); }, []);
+  // Derive categories and maxPrice from products
+  const categories = useMemo(() =>
+    ['All', ...new Set(products.map(p => p.category))],
+    [products]
+  );
 
+  const maxPrice = useMemo(() => {
+    const prices = products.flatMap(p =>
+      p.prices ? Object.values(p.prices).map(Number) : [p.price || 0]
+    );
+    return Math.max(...prices, 1000);
+  }, [products]);
+
+  // Sync priceRange ceiling when maxPrice changes
+  useEffect(() => {
+    setPriceRange(prev => [prev[0], maxPrice]);
+  }, [maxPrice]);
+
+  // Handle category from navigation state
   useEffect(() => {
     if (location.state?.category) {
       setSelectedCategory(location.state.category);
@@ -51,52 +72,33 @@ const Products = () => {
     }
   }, [location.state]);
 
-  const fetchProducts = async () => {
-    try {
-      const res = await axios.get(`${config.API_URL}/api/products`);
-      const list = res.data.success ? res.data.products : Array.isArray(res.data) ? res.data : [];
-      setAllProducts(list);
-      setCategories(['All', ...new Set(list.map(p => p.category))]);
-      cacheProducts(list);
-      const prices = list.flatMap(p => p.prices ? Object.values(p.prices).map(Number) : [p.price || 0]);
-      const max = Math.max(...prices, 1000);
-      setMaxPrice(max);
-      setPriceRange([0, max]);
-    } catch { /* silent */ }
-    finally { setLoading(false); }
-  };
-
   const toggleTag = (tag) => setSelectedTags(prev =>
     prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
   );
 
-  const getMinPrice = (product) => {
-    if (product.prices && typeof product.prices === 'object') {
-      return Math.min(...Object.values(product.prices).map(Number));
-    }
-    return product.price || 0;
-  };
-
-  const filteredProducts = allProducts
-    .filter(p => {
-      const matchCat = selectedCategory === 'All' || p.category === selectedCategory;
-      const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchTag = selectedTags.length === 0 || selectedTags.includes(p.tag);
-      const minP = getMinPrice(p);
-      const matchPrice = minP >= priceRange[0] && minP <= priceRange[1];
-      return matchCat && matchSearch && matchTag && matchPrice;
-    })
-    .sort((a, b) => {
-      if (sortBy === 'price-asc') return getMinPrice(a) - getMinPrice(b);
-      if (sortBy === 'price-desc') return getMinPrice(b) - getMinPrice(a);
-      if (sortBy === 'name') return a.name.localeCompare(b.name);
-      if (sortBy === 'discount') {
-        const da = calcDiscount(a.originalPrices?.[Array.isArray(a.grams) ? a.grams[0] : a.grams], getMinPrice(a)) || 0;
-        const db = calcDiscount(b.originalPrices?.[Array.isArray(b.grams) ? b.grams[0] : b.grams], getMinPrice(b)) || 0;
-        return db - da;
-      }
-      return 0;
-    });
+  const filteredProducts = useMemo(() =>
+    products
+      .filter(p => {
+        const matchCat = selectedCategory === 'All' || p.category === selectedCategory;
+        const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchTag = selectedTags.length === 0 || selectedTags.includes(p.tag);
+        const minP = getMinPrice(p);
+        const matchPrice = minP >= priceRange[0] && minP <= priceRange[1];
+        return matchCat && matchSearch && matchTag && matchPrice;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'price-asc') return getMinPrice(a) - getMinPrice(b);
+        if (sortBy === 'price-desc') return getMinPrice(b) - getMinPrice(a);
+        if (sortBy === 'name') return a.name.localeCompare(b.name);
+        if (sortBy === 'discount') {
+          const da = calcDiscount(a.originalPrices?.[Array.isArray(a.grams) ? a.grams[0] : a.grams], getMinPrice(a)) || 0;
+          const db = calcDiscount(b.originalPrices?.[Array.isArray(b.grams) ? b.grams[0] : b.grams], getMinPrice(b)) || 0;
+          return db - da;
+        }
+        return 0;
+      }),
+    [products, selectedCategory, searchTerm, selectedTags, priceRange, sortBy]
+  );
 
   const activeFiltersCount = selectedTags.length + (sortBy !== 'default' ? 1 : 0) + (priceRange[1] < maxPrice ? 1 : 0);
 
@@ -105,17 +107,23 @@ const Products = () => {
 
       {/* Top Bar */}
       <div className="products-topbar">
-        <div className="search-wrap">
-          <MdSearch className="search-icon-inner" />
+        <div className={`search-wrap ${searchOpen ? 'search-open' : ''}`}>
+          <MdSearch className="search-icon-inner" onClick={() => setSearchOpen(true)} style={{ cursor: 'pointer' }} />
           <input
             type="text"
             placeholder="Search products..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
+            onFocus={() => setSearchOpen(true)}
+            onBlur={() => { if (!searchTerm) setSearchOpen(false); }}
           />
-          {searchTerm && <button className="search-clear" onClick={() => setSearchTerm('')}><MdClose /></button>}
+          {searchTerm && (
+            <button className="search-clear" onClick={() => { setSearchTerm(''); setSearchOpen(false); }}>
+              <MdClose />
+            </button>
+          )}
         </div>
-        <div className="topbar-actions">
+        <div className={`topbar-actions ${searchOpen ? 'actions-hidden' : ''}`}>
           <button className={`filter-toggle-btn ${showFilter ? 'active' : ''}`} onClick={() => setShowFilter(!showFilter)}>
             <MdFilterList />
             Filters
@@ -169,6 +177,12 @@ const Products = () => {
           </div>
           <p>Loading products...</p>
         </div>
+      ) : error ? (
+        <div className="no-products">
+          <span>⚠️</span>
+          <p>Failed to load products. Please try again.</p>
+          <button onClick={() => window.location.reload()}>Retry</button>
+        </div>
       ) : (
         <div className="products-container">
 
@@ -203,7 +217,8 @@ const Products = () => {
               const disc = calcDiscount(origPrice, currentPrice);
 
               return (
-                <div key={product.id} className="product-item" onClick={() => navigate(`/products/${product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${product.id}`)}>
+                <div key={product.id} className="product-item"
+                  onClick={() => navigate(`/products/${product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${product.id}`)}>
                   <div className="product-image-container">
                     {product.tag && <span className={`product-badge ${product.tag}`}>{TAG_LABELS[product.tag] || product.tag}</span>}
                     {disc && <span className="product-disc-badge">-{disc}%</span>}
@@ -215,7 +230,6 @@ const Products = () => {
                   <div className="product-info">
                     <span className="product-cat-label">{product.category}</span>
                     <h3>{product.name}</h3>
-                    {/* <div className="product-rating"><MdStar /><MdStar /><MdStar /><MdStar /><MdStar /><span>4.5</span></div> */}
                     <p>{product.description || ''}</p>
                     <div className="product-details" onClick={e => e.stopPropagation()}>
                       <select
@@ -255,8 +269,6 @@ const Products = () => {
           </div>
         </div>
       )}
-
-
     </div>
   );
 };

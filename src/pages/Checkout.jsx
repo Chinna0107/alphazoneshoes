@@ -25,8 +25,9 @@ const Checkout = () => {
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', address: '' });
   const [placing, setPlacing] = useState(false);
-  const [payMethod, setPayMethod] = useState('razorpay');
+
   const [orderDone, setOrderDone] = useState(false);
+  const [orderDetails, setOrderDetails] = useState(null); // stores snapshot for success page
 
   useEffect(() => {
     axios.get(`${config.API_URL}/api/products`)
@@ -53,57 +54,175 @@ const Checkout = () => {
 
   const isDetailsValid = formData.name && formData.phone && formData.email && formData.address;
 
+  // ── Build order payload ──
+  const buildOrderPayload = (paymentInfo = {}) => ({
+    customer: {
+      name: formData.name,
+      phone: formData.phone,
+      email: formData.email,
+      address: formData.address,
+    },
+    items: cartItems.map(i => ({
+      productId: i.id,
+      name: i.name,
+      category: i.category,
+      size: i.selectedWeight,
+      quantity: i.quantity,
+      price: i.selectedPrice,
+      total: i.selectedPrice * i.quantity,
+      image: i.images?.[0] || '',
+    })),
+    subtotal,
+    totalSavings,
+    paymentMethod: paymentInfo.method || 'whatsapp',
+    paymentStatus: paymentInfo.status || 'pending',
+    razorpayPaymentId: paymentInfo.razorpayPaymentId || null,
+    razorpayOrderId: paymentInfo.razorpayOrderId || null,
+    razorpaySignature: paymentInfo.razorpaySignature || null,
+    createdAt: new Date().toISOString(),
+    date: new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' }),
+    time: new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }),
+  });
+
+  // ── Save order to backend ──
+  const saveOrder = async (payload) => {
+    try {
+      await axios.post(`${config.API_URL}/api/orders`, payload);
+    } catch { /* silent — don't block user flow */ }
+  };
+
+  // ── Razorpay handler ──
   const handleRazorpay = async () => {
     setPlacing(true);
     const ok = await loadRazorpay();
     if (!ok) { alert('Failed to load Razorpay. Please try WhatsApp order.'); setPlacing(false); return; }
 
-    // In production: create order on backend and get order_id
-    // Here we open Razorpay directly with amount
-    const options = {
-      key: 'YOUR_RAZORPAY_KEY_ID', // 🔑 Replace with your Razorpay Key ID
-      amount: subtotal * 100, // paise
-      currency: 'INR',
-      name: 'TheAlphaZone',
-      description: `Order of ${cartItems.length} item(s)`,
-      image: 'https://alphazonebe.vercel.app/logo.png',
-      prefill: {
-        name: formData.name,
-        email: formData.email,
-        contact: formData.phone,
-      },
-      notes: { address: formData.address },
-      theme: { color: '#e1782d' },
-      handler: () => {
-        clearCart();
-        setOrderDone(true);
-        setPlacing(false);
-      },
-      modal: {
-        ondismiss: () => setPlacing(false),
-      },
-    };
-    new window.Razorpay(options).open();
+    try {
+      // Step 1: Create order on backend
+      const { data } = await axios.post(`${config.API_URL}/api/orders/razorpay/create`, { amount: subtotal });
+      if (!data.success) throw new Error('Order creation failed');
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: data.order.amount,
+        currency: 'INR',
+        name: 'TheAlphaZone',
+        description: `Order of ${cartItems.length} item(s)`,
+        order_id: data.order.id,
+        prefill: { name: formData.name, email: formData.email, contact: formData.phone },
+        notes: { address: formData.address },
+        theme: { color: '#e1782d' },
+        handler: async (response) => {
+          // Step 2: Verify signature on backend
+          const verify = await axios.post(`${config.API_URL}/api/orders/razorpay/verify`, {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          });
+          if (!verify.data.verified) { alert('Payment verification failed!'); setPlacing(false); return; }
+
+          // Step 3: Save order
+          const payload = buildOrderPayload({
+            method: 'razorpay',
+            status: 'paid',
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpayOrderId: response.razorpay_order_id,
+            razorpaySignature: response.razorpay_signature,
+          });
+          await saveOrder(payload);
+          setOrderDetails({ ...payload, items: cartItems });
+          clearCart();
+          setOrderDone(true);
+          setPlacing(false);
+        },
+        modal: { ondismiss: () => setPlacing(false) },
+      };
+      new window.Razorpay(options).open();
+    } catch (error) {
+      alert('Error initiating payment. Please try again.');
+      setPlacing(false);
+    }
   };
 
-  const handleWhatsApp = () => {
-    const lines = cartItems.map(i =>
-      `${i.name} (${i.selectedWeight}) x${i.quantity} = ₹${i.selectedPrice * i.quantity}`
-    ).join('%0A');
-    const msg = `*New Order — TheAlphaZone*%0A%0A👤 *Customer*%0AName: ${formData.name}%0APhone: ${formData.phone}%0AEmail: ${formData.email}%0AAddress: ${formData.address}%0A%0A🛍️ *Items*%0A${lines}%0A%0A💰 *Total: ₹${subtotal}*`;
-    window.open(`https://wa.me/919100009907?text=${msg}`, '_blank');
-    clearCart();
-    setOrderDone(true);
-  };
+  // ── Success Page ──
+  if (orderDone && orderDetails) return (
+    <div className="co-success-page">
+      <div className="co-success-container">
 
-  // ── Order Success ──
-  if (orderDone) return (
-    <div className="co-success">
-      <div className="co-success-card glass">
-        <MdCheckCircle className="co-success-icon" />
-        <h2>Order Placed!</h2>
-        <p>Thank you, <strong>{formData.name}</strong>. We'll confirm your order shortly.</p>
-        <button onClick={() => navigate('/products')}>Continue Shopping →</button>
+        {/* Header */}
+        <div className="co-success-header">
+          <div className="co-success-icon-wrap">
+            <MdCheckCircle className="co-success-icon" />
+          </div>
+          <h1>Order Placed Successfully! 🎉</h1>
+          <p className="co-success-sub">
+            Thank you, <strong>{orderDetails.customer.name}</strong>! Your order has been received and is being processed.
+          </p>
+          {orderDetails.paymentMethod === 'razorpay' && orderDetails.razorpayPaymentId && (
+            <div className="co-success-txn">
+              <span>Payment ID:</span> <strong>{orderDetails.razorpayPaymentId}</strong>
+            </div>
+          )}
+        </div>
+
+        <div className="co-success-grid">
+
+          {/* Ordered Items */}
+          <div className="co-success-items glass">
+            <h3>🛍️ Your Items</h3>
+            <div className="co-success-item-list">
+              {orderDetails.items.map((item, i) => (
+                <div key={i} className="co-success-item">
+                  <img src={item.images?.[0] || item.image} alt={item.name} />
+                  <div className="co-success-item-info">
+                    <p>{item.name}</p>
+                    <span>{item.selectedWeight} × {item.quantity}</span>
+                  </div>
+                  <strong>₹{item.selectedPrice * item.quantity}</strong>
+                </div>
+              ))}
+            </div>
+            <div className="co-success-totals">
+              {orderDetails.totalSavings > 0 && (
+                <div className="co-success-row savings"><span>🎉 You Saved</span><span>−₹{orderDetails.totalSavings}</span></div>
+              )}
+              <div className="co-success-row"><span>Delivery</span><span className="co-free">FREE</span></div>
+              <div className="co-success-total-row"><span>Total Paid</span><span>₹{orderDetails.subtotal}</span></div>
+            </div>
+          </div>
+
+          {/* Delivery & Payment Info */}
+          <div className="co-success-right">
+            <div className="co-success-delivery glass">
+              <h3>📍 Delivery Details</h3>
+              <p><span>Name</span><strong>{orderDetails.customer.name}</strong></p>
+              <p><span>Phone</span><strong>{orderDetails.customer.phone}</strong></p>
+              <p><span>Email</span><strong>{orderDetails.customer.email}</strong></p>
+              <p><span>Address</span><strong>{orderDetails.customer.address}</strong></p>
+            </div>
+
+            <div className="co-success-payment glass">
+              <h3>💳 Payment Info</h3>
+              <p><span>Method</span><strong>Online (Razorpay)</strong></p>
+              <p><span>Status</span>
+                <strong className={orderDetails.paymentStatus === 'paid' ? 'co-paid' : 'co-pending'}>
+                  {orderDetails.paymentStatus === 'paid' ? '✅ Paid' : '⏳ Pending'}
+                </strong>
+              </p>
+            </div>
+
+            <div className="co-success-msg glass">
+              <p>🚚 Your order will be delivered within <strong>2–3 business days</strong>.</p>
+              <p>📞 Our team will call you at <strong>{orderDetails.customer.phone}</strong> to confirm.</p>
+              <p>For any queries, reach us on WhatsApp at <strong>+91 8885553241</strong>.</p>
+            </div>
+
+            <button className="co-success-shop-btn" onClick={() => navigate('/products')}>
+              Continue Shopping →
+            </button>
+          </div>
+
+        </div>
       </div>
     </div>
   );
@@ -184,7 +303,6 @@ const Checkout = () => {
                 );
               })}
             </div>
-
             <div className="co-summary-bar glass">
               <div className="co-summary-info">
                 <span>{cartItems.length} item{cartItems.length > 1 ? 's' : ''}</span>
@@ -192,12 +310,8 @@ const Checkout = () => {
                 <span className="co-sum-total-inline">Total: <strong>₹{subtotal}</strong></span>
               </div>
               <div className="co-step-actions">
-                <button className="co-back-btn" onClick={() => navigate('/products')}>
-                  <MdArrowBack /> Back to Shop
-                </button>
-                <button className="co-next-btn" onClick={() => setStep(1)} disabled={cartItems.length === 0}>
-                  Proceed to Details →
-                </button>
+                <button className="co-back-btn" onClick={() => navigate('/products')}><MdArrowBack /> Back to Shop</button>
+                <button className="co-next-btn" onClick={() => setStep(1)} disabled={cartItems.length === 0}>Proceed to Details →</button>
               </div>
             </div>
           </div>
@@ -218,12 +332,8 @@ const Checkout = () => {
                     <label>{f.label}</label>
                     <div className="co-input-wrap">
                       <span className="co-input-icon">{f.icon}</span>
-                      <input
-                        type={f.type}
-                        placeholder={f.placeholder}
-                        value={formData[f.key]}
-                        onChange={e => setFormData({ ...formData, [f.key]: e.target.value })}
-                      />
+                      <input type={f.type} placeholder={f.placeholder} value={formData[f.key]}
+                        onChange={e => setFormData({ ...formData, [f.key]: e.target.value })} />
                     </div>
                   </div>
                 ))}
@@ -231,45 +341,29 @@ const Checkout = () => {
                   <label>Delivery Address</label>
                   <div className="co-input-wrap">
                     <span className="co-input-icon" style={{ top: '0.9rem' }}>📍</span>
-                    <textarea
-                      placeholder="House no, Street, City, Pincode"
-                      value={formData.address}
-                      onChange={e => setFormData({ ...formData, address: e.target.value })}
-                      rows={3}
-                    />
+                    <textarea placeholder="House no, Street, City, Pincode" value={formData.address}
+                      onChange={e => setFormData({ ...formData, address: e.target.value })} rows={3} />
                   </div>
                 </div>
               </div>
-
               <div className="co-step-actions">
-                <button className="co-back-btn" onClick={() => setStep(0)}>
-                  <MdArrowBack /> Back
-                </button>
-                <button className="co-next-btn" onClick={() => setStep(2)} disabled={!isDetailsValid}>
-                  Proceed to Payment →
-                </button>
+                <button className="co-back-btn" onClick={() => setStep(0)}><MdArrowBack /> Back</button>
+                <button className="co-next-btn" onClick={() => setStep(2)} disabled={!isDetailsValid}>Proceed to Payment →</button>
               </div>
             </div>
-
-            {/* Mini order summary */}
             <div className="co-mini-summary glass">
               <h3>Order Summary</h3>
               <div className="co-mini-items">
                 {cartItems.map(item => (
                   <div key={`${item.id}-${item.selectedWeight}`} className="co-mini-item">
                     <img src={item.images[0]} alt={item.name} />
-                    <div>
-                      <p>{item.name}</p>
-                      <span>{item.selectedWeight} × {item.quantity}</span>
-                    </div>
+                    <div><p>{item.name}</p><span>{item.selectedWeight} × {item.quantity}</span></div>
                     <strong>₹{item.selectedPrice * item.quantity}</strong>
                   </div>
                 ))}
               </div>
               <div className="co-mini-total">
-                {totalSavings > 0 && (
-                  <div className="co-sum-row savings"><span>🎉 Savings</span><span>−₹{totalSavings}</span></div>
-                )}
+                {totalSavings > 0 && <div className="co-sum-row savings"><span>🎉 Savings</span><span>−₹{totalSavings}</span></div>}
                 <div className="co-sum-row"><span>Delivery</span><span className="co-free">FREE</span></div>
                 <div className="co-sum-total"><span>Total</span><span>₹{subtotal}</span></div>
               </div>
@@ -281,85 +375,41 @@ const Checkout = () => {
         {step === 2 && (
           <div className="co-step-content co-details-grid">
             <div className="co-form-card glass">
-              <h2>Choose Payment</h2>
-
+              <h2>Payment</h2>
               <div className="co-pay-methods">
-                <div
-                  className={`co-pay-option ${payMethod === 'razorpay' ? 'selected' : ''}`}
-                  onClick={() => setPayMethod('razorpay')}
-                >
+                <div className="co-pay-option selected">
                   <div className="co-pay-radio" />
-                  <div className="co-pay-info">
-                    <strong>💳 Pay Online</strong>
-                    <span>UPI, Cards, Net Banking via Razorpay</span>
-                  </div>
-                  <div className="co-pay-badges">
-                    <span>UPI</span><span>Visa</span><span>MC</span>
-                  </div>
-                </div>
-
-                <div
-                  className={`co-pay-option ${payMethod === 'whatsapp' ? 'selected' : ''}`}
-                  onClick={() => setPayMethod('whatsapp')}
-                >
-                  <div className="co-pay-radio" />
-                  <div className="co-pay-info">
-                    <strong>💬 Order via WhatsApp</strong>
-                    <span>Pay on delivery or via UPI after confirmation</span>
-                  </div>
-                  <div className="co-pay-badges">
-                    <span>COD</span><span>UPI</span>
-                  </div>
+                  <div className="co-pay-info"><strong>💳 Pay Online</strong><span>UPI, Cards, Net Banking via Razorpay</span></div>
+                  <div className="co-pay-badges"><span>UPI</span><span>Visa</span><span>MC</span><span>Net Banking</span></div>
                 </div>
               </div>
-
-              {/* Customer recap */}
               <div className="co-recap glass">
                 <p><span>👤</span> {formData.name}</p>
                 <p><span>📞</span> {formData.phone}</p>
                 <p><span>✉️</span> {formData.email}</p>
                 <p><span>📍</span> {formData.address}</p>
               </div>
-
               <div className="co-step-actions">
-                <button className="co-back-btn" onClick={() => setStep(1)}>
-                  <MdArrowBack /> Back
-                </button>
-                <button
-                  className="co-place-btn"
-                  onClick={payMethod === 'razorpay' ? handleRazorpay : handleWhatsApp}
-                  disabled={placing}
-                >
-                  {placing
-                    ? <><span className="co-spinner" /> Processing...</>
-                    : payMethod === 'razorpay'
-                      ? '💳 Pay ₹' + subtotal
-                      : '💬 Order via WhatsApp'}
+                <button className="co-back-btn" onClick={() => setStep(1)}><MdArrowBack /> Back</button>
+                <button className="co-place-btn" onClick={handleRazorpay} disabled={placing}>
+                  {placing ? <><span className="co-spinner" /> Processing...</> : '💳 Pay ₹' + subtotal}
                 </button>
               </div>
-
               <p className="co-secure-note"><MdLock /> Secured & encrypted checkout</p>
             </div>
-
-            {/* Mini order summary */}
             <div className="co-mini-summary glass">
               <h3>Order Summary</h3>
               <div className="co-mini-items">
                 {cartItems.map(item => (
                   <div key={`${item.id}-${item.selectedWeight}`} className="co-mini-item">
                     <img src={item.images[0]} alt={item.name} />
-                    <div>
-                      <p>{item.name}</p>
-                      <span>{item.selectedWeight} × {item.quantity}</span>
-                    </div>
+                    <div><p>{item.name}</p><span>{item.selectedWeight} × {item.quantity}</span></div>
                     <strong>₹{item.selectedPrice * item.quantity}</strong>
                   </div>
                 ))}
               </div>
               <div className="co-mini-total">
-                {totalSavings > 0 && (
-                  <div className="co-sum-row savings"><span>🎉 Savings</span><span>−₹{totalSavings}</span></div>
-                )}
+                {totalSavings > 0 && <div className="co-sum-row savings"><span>🎉 Savings</span><span>−₹{totalSavings}</span></div>}
                 <div className="co-sum-row"><span>Delivery</span><span className="co-free">FREE</span></div>
                 <div className="co-sum-total"><span>Total</span><span>₹{subtotal}</span></div>
               </div>

@@ -33,6 +33,12 @@ const AdminHeader = () => {
           📦 Products
         </button>
         <button
+          className={`admin-nav-btn ${isActive('/admin/orders') ? 'active' : ''}`}
+          onClick={() => navigate('/admin/orders')}
+        >
+          🧾 Orders
+        </button>
+        <button
           className={`admin-nav-btn ${isActive('/admin/sliders') ? 'active' : ''}`}
           onClick={() => navigate('/admin/sliders')}
         >
