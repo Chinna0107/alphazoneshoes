@@ -15,6 +15,7 @@ const AdminProducts = () => {
   const [formData, setFormData] = useState({
     name: '',
     category: '',
+    gender: '',
     grams: [],
     prices: {},
     originalPrices: {},
@@ -177,6 +178,7 @@ const AdminProducts = () => {
     setFormData({
       name: product.name,
       category: product.category,
+      gender: product.gender || '',
       grams: product.grams || [],
       prices: product.prices || {},
       originalPrices: product.originalPrices || {},
@@ -191,6 +193,7 @@ const AdminProducts = () => {
     setFormData({
       name: '',
       category: '',
+      gender: '',
       grams: [],
       prices: {},
       originalPrices: {},
@@ -303,6 +306,25 @@ const AdminProducts = () => {
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
+            </div>
+            <div className="form-field">
+              <label>Gender *</label>
+              <div className="gender-options">
+                {['Men', 'Women', 'Children'].map(g => (
+                  <label key={g} className={`gender-option ${formData.gender === g ? 'active' : ''}`}>
+                    <input
+                      type="radio"
+                      name="gender"
+                      value={g}
+                      checked={formData.gender === g}
+                      onChange={() => setFormData({ ...formData, gender: g })}
+                      required
+                    />
+                    <span>{g === 'Men' ? '👨' : g === 'Women' ? '👩' : '👦'}</span>
+                    {g}
+                  </label>
+                ))}
+              </div>
             </div>
             <div className="form-field">
               <label>
@@ -433,6 +455,7 @@ const AdminProducts = () => {
               <th>Image</th>
               <th>Name</th>
               <th>Category</th>
+              <th>Gender</th>
               <th>Weight</th>
               <th>Price</th>
               <th>Tag</th>
@@ -441,7 +464,7 @@ const AdminProducts = () => {
           </thead>
           <tbody>
             {products.length === 0 ? (
-              <tr><td colSpan="7">
+              <tr><td colSpan="8">
                 <div className="empty-state">
                   <span>📦</span>
                   <p>No products yet. Add your first product!</p>
@@ -452,6 +475,7 @@ const AdminProducts = () => {
                 <td><img src={product.images[0]} alt={product.name} /></td>
                 <td className="product-name-cell">{product.name}</td>
                 <td><span className="category-badge">{product.category}</span></td>
+                <td><span className={`gender-badge gender-${(product.gender || 'men').toLowerCase()}`}>{product.gender === 'Men' ? '👨' : product.gender === 'Women' ? '👩' : product.gender === 'Children' ? '👦' : '—'} {product.gender || '—'}</span></td>
                 <td>{Array.isArray(product.grams) ? product.grams.join(', ') : product.grams}</td>
                 <td>
                   <div className="price-list">

@@ -5,7 +5,7 @@ import { MdFilterList, MdClose, MdSearch } from 'react-icons/md';
 import useProducts from '../hooks/useProducts';
 import './Products.css';
 
-const CATEGORY_ICONS = { All: '🛍️', Sandals: '👡', Shoes: '👟', Slippers: '🩴', 'T-Shirts': '👕', 'Track Pants': '🩲' };
+const CATEGORY_ICONS = { All: '🛍️', Sandals: '👡', Shoes: '👟', Slippers: '🩴', 'T-Shirts': '👕', 'Track Pants': '🏃' };
 const TAG_LABELS = {
   bestseller: '🔥 Best Seller', popular: '⭐ Popular',
   new: '🆕 New Arrival', offer: '💰 Offer',
@@ -38,6 +38,7 @@ const Products = () => {
   const navigate = useNavigate();
 
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedGender, setSelectedGender] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
@@ -80,11 +81,12 @@ const Products = () => {
     products
       .filter(p => {
         const matchCat = selectedCategory === 'All' || p.category === selectedCategory;
+        const matchGender = selectedGender === 'All' || p.gender === selectedGender;
         const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
         const matchTag = selectedTags.length === 0 || selectedTags.includes(p.tag);
         const minP = getMinPrice(p);
         const matchPrice = minP >= priceRange[0] && minP <= priceRange[1];
-        return matchCat && matchSearch && matchTag && matchPrice;
+        return matchCat && matchGender && matchSearch && matchTag && matchPrice;
       })
       .sort((a, b) => {
         if (sortBy === 'price-asc') return getMinPrice(a) - getMinPrice(b);
@@ -97,10 +99,10 @@ const Products = () => {
         }
         return 0;
       }),
-    [products, selectedCategory, searchTerm, selectedTags, priceRange, sortBy]
+    [products, selectedCategory, selectedGender, searchTerm, selectedTags, priceRange, sortBy]
   );
 
-  const activeFiltersCount = selectedTags.length + (sortBy !== 'default' ? 1 : 0) + (priceRange[1] < maxPrice ? 1 : 0);
+  const activeFiltersCount = selectedTags.length + (sortBy !== 'default' ? 1 : 0) + (priceRange[1] < maxPrice ? 1 : 0) + (selectedGender !== 'All' ? 1 : 0);
 
   return (
     <div className="products-page">
@@ -144,6 +146,20 @@ const Products = () => {
       {showFilter && (
         <div className="filter-panel glass">
           <div className="filter-section">
+            <h4>Gender</h4>
+            <div className="filter-tags">
+              {['All', 'Men', 'Women', 'Children'].map(g => (
+                <button
+                  key={g}
+                  className={`filter-tag-btn ${selectedGender === g ? 'active' : ''}`}
+                  onClick={() => { setSelectedGender(g); setShowFilter(false); }}
+                >
+                  {g === 'All' ? '🛍️' : g === 'Men' ? '👨' : g === 'Women' ? '👩' : '👦'} {g}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="filter-section">
             <h4>Tags</h4>
             <div className="filter-tags">
               {Object.entries(TAG_LABELS).map(([val, label]) => (
@@ -164,7 +180,7 @@ const Products = () => {
               className="price-range-slider"
             />
           </div>
-          <button className="filter-reset" onClick={() => { setSelectedTags([]); setSortBy('default'); setPriceRange([0, maxPrice]); }}>
+          <button className="filter-reset" onClick={() => { setSelectedTags([]); setSortBy('default'); setPriceRange([0, maxPrice]); setSelectedGender('All'); }}>
             Reset Filters
           </button>
         </div>
@@ -187,6 +203,7 @@ const Products = () => {
         <div className="products-container">
 
           {/* Sidebar */}
+          <div className="products-main">
           <aside className="categories-sidebar">
             <h3>Categories</h3>
             <ul>
@@ -266,6 +283,7 @@ const Products = () => {
                 </div>
               );
             })}
+          </div>
           </div>
         </div>
       )}

@@ -230,11 +230,18 @@
 }
 .loading-container p { font-size: 1.1rem; color: #e1782d; font-weight: 500; }
 
-/* Layout */
 .products-container {
-  display: flex; gap: 2rem;
-  max-width: 1600px; margin: 2rem auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 1600px; margin: 1rem auto;
   padding: 0 2.5rem;
+}
+
+.products-main {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
 }
 
 /* Sidebar */
@@ -589,7 +596,8 @@
   .filter-tag-btn { padding: 0.3rem 0.65rem; font-size: 0.75rem; }
   .price-range-slider { width: 100%; }
 
-  .products-container { flex-direction: column; padding: 0 0.75rem; margin: 1rem auto; }
+  .products-container { padding: 0 0.75rem; margin: 0.5rem auto; }
+  .products-main { flex-direction: column; gap: 0.75rem; margin-top: 0.5rem; }
   .categories-sidebar { width: 100%; position: static; max-height: none; padding: 0.75rem 1rem; }
   .categories-sidebar h3 { display: none; }
   .categories-sidebar ul { display: flex; overflow-x: auto; gap: 0.4rem; padding-bottom: 0.25rem; scrollbar-width: none; }
@@ -620,4 +628,33 @@
   .add-to-cart { font-size: 0.72rem; padding: 0.5rem; }
   .quantity-control button { width: 26px; height: 26px; font-size: 0.85rem; }
   .quantity-control span { font-size: 0.82rem; }
+}
+
+/* ── Gender Filter Bar ── */
+.gender-filter-bar {
+  display: flex; gap: 0.6rem;
+  padding: 1rem 2.5rem 0;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+}
+
+.gender-filter-btn {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.55rem 1.25rem;
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.6);
+  border-radius: 50px; font-size: 0.88rem; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: all 0.25s ease;
+}
+.gender-filter-btn:hover { background: rgba(225,120,45,0.1); border-color: rgba(225,120,45,0.35); color: #fff; }
+.gender-filter-btn.active {
+  background: linear-gradient(135deg, rgba(225,120,45,0.25), rgba(180,30,30,0.2));
+  border-color: #e1782d; color: #fff;
+  box-shadow: 0 4px 14px rgba(180,30,30,0.2);
+}
+
+@media (max-width: 768px) {
+  .gender-filter-bar { padding: 0.75rem 0.75rem 0; gap: 0.4rem; }
+  .gender-filter-btn { padding: 0.45rem 0.9rem; font-size: 0.8rem; }
 }

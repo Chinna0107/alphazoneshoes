@@ -6,7 +6,7 @@ const Footer = () => (
     <div className="footer-content">
       <div className="footer-section">
         <h3><span className="f-alpha">TheAlpha</span><span className="f-zone">Zone</span></h3>
-        <p>TheAlphaZone is your premium fashion destination for sandals, shoes, slippers, tshirts & night pants — style that moves with you.</p>
+        <p>TheAlphaZone is your premium fashion destination for sandals, shoes, slippers, tshirts & track pants — style that moves with you.</p>
       </div>
       <div className="footer-section">
         <h4>Quick Links</h4>

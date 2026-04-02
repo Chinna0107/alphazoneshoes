@@ -288,8 +288,11 @@ const AdminOrders = () => {
             <button className="ao-modal-close" onClick={() => setSelectedOrder(null)}>✕</button>
 
             <div className="ao-modal-header">
-              <h2>Order Details</h2>
-              <span className="ao-modal-date">{formatDate(selectedOrder)}</span>
+              <div>
+                <h2>Order Details</h2>
+                <span className="ao-modal-date">{formatDate(selectedOrder)}</span>
+              </div>
+              <button className="ao-print-btn" onClick={() => window.print()} title="Print Order">🖨️ Print</button>
             </div>
 
             {/* Status Pipeline */}

@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import axios from 'axios';
 import Slider from 'react-slick';
 import { MdStar, MdLocalShipping, MdVerified, MdPayment, MdPhone, MdShoppingCart, MdMessage } from 'react-icons/md';
+import { PiPantsFill } from 'react-icons/pi';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import useProducts from '../hooks/useProducts';
@@ -15,7 +16,7 @@ const CATEGORIES = [
   { name: 'Shoes', icon: '👟', desc: 'Premium footwear for all lifestyles' },
   { name: 'Slippers', icon: '🩴', desc: 'Comfortable home & casual slippers' },
   { name: 'T-Shirts', icon: '👕', desc: 'Trendy tees for every mood' },
-  { name: 'Night Pants', icon: null, img: 'https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=200&h=200&fit=crop', desc: 'Ultra-soft sleep & lounge wear' },
+  { name: 'Track Pants', icon: null, img: null, reactIcon: true, desc: 'Comfortable track & lounge wear' },
 ];
 
 const SLIDES = [
@@ -87,6 +88,8 @@ const Home = () => {
                 <div key={cat.name} className="cat-card glass" onClick={() => navigate('/products', { state: { category: cat.name } })}>
                   {cat.img
                     ? <img src={cat.img} alt={cat.name} className="cat-img" />
+                    : cat.reactIcon
+                    ? <PiPantsFill className="cat-react-icon" />
                     : <span className="cat-icon">{cat.icon}</span>
                   }
                   <h3>{cat.name}</h3>
@@ -222,7 +225,7 @@ const Home = () => {
             <div className="testimonials-grid">
               {[
                 { name: 'Rahul M.', role: 'Regular Customer', text: '"TheAlphaZone has the best sandals! Super comfortable and stylish. Highly recommend!"', init: 'R' },
-                { name: 'Priya S.', role: 'Fashion Lover', text: '"Ordered tshirts and night pants — amazing quality and fast delivery. Love it!"', init: 'P' },
+                { name: 'Priya S.', role: 'Fashion Lover', text: '"Ordered tshirts and track pants — amazing quality and fast delivery. Love it!"', init: 'P' },
                 { name: 'Arjun K.', role: 'Happy Customer', text: '"Best shoes at this price range. Will definitely order again from TheAlphaZone!"', init: 'A' },
               ].map((t, i) => (
                 <div key={i} className="testimonial-card glass">

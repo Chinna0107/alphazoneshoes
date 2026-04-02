@@ -366,3 +366,70 @@
   .ao-stage-tabs { gap: 0.35rem; }
   .ao-stage-tab { font-size: 0.78rem; padding: 0.5rem 0.85rem; }
 }
+
+/* ── Print Button ── */
+.ao-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.ao-print-btn {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.55rem 1.1rem;
+  background: rgba(255,255,255,0.08) !important;
+  border: 1.5px solid rgba(255,255,255,0.2) !important;
+  color: #fff !important;
+  border-radius: 50px !important;
+  font-size: 0.85rem; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+.ao-print-btn:hover {
+  background: rgba(225,120,45,0.2) !important;
+  border-color: #e1782d !important;
+  color: #e1782d !important;
+}
+
+/* ── Print Styles ── */
+@media print {
+  body * { visibility: hidden; }
+  .ao-modal, .ao-modal * { visibility: visible; }
+  .ao-modal {
+    position: fixed; inset: 0;
+    background: #fff !important;
+    color: #000 !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 2rem !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .ao-modal-close,
+  .ao-print-btn,
+  .ao-pipeline { display: none !important; }
+
+  .ao-modal-header h2 { color: #000 !important; font-size: 1.4rem; }
+  .ao-modal-date { color: #555 !important; }
+
+  .ao-modal-section,
+  .ao-modal-items { background: #f9f9f9 !important; border: 1px solid #ddd !important; border-radius: 8px !important; }
+  .ao-modal-section h4,
+  .ao-modal-items h4 { color: #333 !important; }
+  .ao-modal-section p span { color: #666 !important; }
+  .ao-modal-section p strong { color: #000 !important; }
+
+  .ao-modal-item img { width: 40px !important; height: 40px !important; }
+  .ao-modal-item-info strong { color: #000 !important; }
+  .ao-modal-item-info span { color: #555 !important; }
+  .ao-modal-item-right strong { color: #e1782d !important; }
+
+  .ao-modal-total span:last-child {
+    -webkit-text-fill-color: #e1782d !important;
+    color: #e1782d !important;
+  }
+  .ao-txn-id { color: #e1782d !important; }
+}

@@ -122,6 +122,15 @@
 
 .cat-icon { font-size: 2.8rem; display: block; margin-bottom: 0.75rem; }
 
+.cat-react-icon {
+  font-size: 2.8rem;
+  color: #e1782d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.75rem;
+}
+
 .cat-img {
   width: 72px; height: 72px;
   object-fit: cover; border-radius: 50%;
