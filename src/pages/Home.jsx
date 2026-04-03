@@ -20,9 +20,26 @@ const CATEGORIES = [
 ];
 
 const SLIDES = [
-  { id: 1, imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1200&h=500&fit=crop', title: 'Step Into Style' },
-  { id: 2, imageUrl: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1200&h=500&fit=crop', title: 'Fashion Forward' },
-  { id: 3, imageUrl: 'https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=1200&h=500&fit=crop', title: 'Comfort Meets Style' },
+  {
+    id: 1, title: 'TheAlphaZone',
+    desktop: 'https://res.cloudinary.com/dgyykbmt6/image/upload/q_auto/f_auto/v1775230558/ChatGPT_Image_Apr_3_2026_09_05_42_PM_ho0jqa.png',
+    mobile:  'https://res.cloudinary.com/dgyykbmt6/image/upload/w_1080,h_1080,c_pad,b_auto,q_auto,f_auto/v1775231862/Alpha_Zone_Promotion_Poster_aaqsgf.png',
+  },
+  {
+    id: 2, title: 'Women Wear',
+    desktop: 'https://res.cloudinary.com/dgyykbmt6/image/upload/q_auto/f_auto/v1775231471/Women_Styles_fyth8i.png',
+    mobile:  'https://res.cloudinary.com/dgyykbmt6/image/upload/w_1080,h_1180,c_pad,b_auto,q_auto,f_auto/v1775231866/Women_Styles_iz0gtu.png',
+  },
+  {
+    id: 3, title: 'Men Wear',
+    desktop: 'https://res.cloudinary.com/dgyykbmt6/image/upload/q_auto/f_auto/v1775231467/Men_Styles_soz6os.png',
+    mobile:  'https://res.cloudinary.com/dgyykbmt6/image/upload/w_1080,h_1180,c_pad,b_auto,q_auto,f_auto/v1775231861/Men_Styles_evnc6k.png',
+  },
+  {
+    id: 4, title: 'Kids Wear',
+    desktop: 'https://res.cloudinary.com/dgyykbmt6/image/upload/q_auto/f_auto/v1775230879/Kids_Styles_1_1_dpgyj7.png',
+    mobile:  'https://res.cloudinary.com/dgyykbmt6/image/upload/w_1080,h_1180,c_pad,b_auto,q_auto,f_auto/v1775231860/Kids_Styles_1_dn35yb.png',
+  },
 ];
 
 const Home = () => {
@@ -67,12 +84,18 @@ const Home = () => {
             <Slider {...sliderSettings} className="hero-slider">
               {sliders.map(s => (
                 <div key={s.id} className="slide">
-                  <img src={s.imageUrl} alt={s.title} />
-                  <div className="slide-overlay">
-                    <div className="slide-text glass">
-                      <h1>Welcome to <span className="brand-alpha">TheAlpha</span><span className="brand-zone">Zone</span></h1>
-                      <p>Fashion that defines you</p>
-                      <button className="hero-btn" onClick={() => navigate('/products')}>Shop Now →</button>
+                  <div className="slide-box">
+                    <img src={s.desktop || s.imageUrl} alt={s.title} />
+                    <div className="slide-overlay">
+                      <div className="slide-text glass">
+                        <span className="slide-tag">New Collection</span>
+                        <h1>Welcome to <span className="brand-alpha">TheAlpha</span><span className="brand-zone">Zone</span></h1>
+                        <p>Fashion that defines you — sandals, shoes, tshirts & more</p>
+                        <div className="slide-btns">
+                          <button className="hero-btn" onClick={() => navigate('/products')}>Shop Now →</button>
+                          <button className="hero-btn-outline" onClick={() => navigate('/about')}>Our Story</button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

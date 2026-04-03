@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { useUserAuth } from '../context/UserAuthContext';
-import logo from '../assets/logo2.jpeg';
+import logo from '../assets/logo3.png';
 import './Header.css';
 
 
