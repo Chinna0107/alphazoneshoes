@@ -1,0 +1,110 @@
+.ac-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.ac-form { margin-bottom: 2rem; }
+
+.ac-field-note {
+  font-size: 0.75rem; color: rgba(255,255,255,0.35);
+  margin-top: 0.3rem; display: block;
+}
+
+/* ── Table ── */
+.ac-table-wrap {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,200,160,0.12);
+  border-radius: 18px; overflow: hidden;
+  box-shadow: 0 8px 32px rgba(180,30,30,0.12);
+}
+
+.ac-code-cell { display: flex; flex-direction: column; gap: 0.2rem; }
+
+.ac-code {
+  font-size: 0.95rem; font-weight: 800;
+  color: #e1782d; letter-spacing: 1.5px;
+  font-family: monospace;
+}
+
+.ac-desc { font-size: 0.75rem; color: rgba(255,255,255,0.4); }
+
+.ac-type-badge {
+  display: inline-block; padding: 0.25rem 0.7rem;
+  border-radius: 20px; font-size: 0.78rem; font-weight: 700;
+  text-transform: capitalize;
+}
+.ac-type-badge.percent {
+  background: rgba(96,165,250,0.12);
+  border: 1px solid rgba(96,165,250,0.3);
+  color: #60a5fa;
+}
+.ac-type-badge.flat {
+  background: rgba(167,139,250,0.12);
+  border: 1px solid rgba(167,139,250,0.3);
+  color: #a78bfa;
+}
+
+.ac-discount-val { font-size: 1rem; font-weight: 800; color: #4ade80; }
+
+.ac-none { color: rgba(255,255,255,0.3); font-size: 0.85rem; }
+
+/* ── Usage Bar ── */
+.ac-usage { display: flex; flex-direction: column; gap: 0.35rem; }
+.ac-usage span { font-size: 0.82rem; color: rgba(255,255,255,0.6); font-weight: 600; }
+.ac-usage-bar {
+  width: 80px; height: 5px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px; overflow: hidden;
+}
+.ac-usage-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #e1782d, #f0a54b);
+  border-radius: 10px;
+  transition: width 0.4s ease;
+}
+
+/* ── Expiry ── */
+.ac-expiry { font-size: 0.82rem; color: rgba(255,255,255,0.6); font-weight: 600; }
+.ac-expired { font-size: 0.82rem; color: #f87171; font-weight: 600; }
+
+/* ── Toggle Button ── */
+.ac-toggle-btn {
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px; font-size: 0.78rem; font-weight: 700;
+  cursor: pointer; font-family: inherit; transition: all 0.25s ease;
+  white-space: nowrap;
+}
+.ac-toggle-btn.active {
+  background: rgba(74,222,128,0.12) !important;
+  border: 1px solid rgba(74,222,128,0.3) !important;
+  color: #4ade80 !important;
+}
+.ac-toggle-btn.active:hover { background: rgba(74,222,128,0.25) !important; }
+.ac-toggle-btn.inactive {
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  color: rgba(255,255,255,0.4) !important;
+}
+.ac-toggle-btn.inactive:hover { background: rgba(225,120,45,0.12) !important; color: #fff !important; }
+.ac-toggle-btn:disabled {
+  background: rgba(248,113,113,0.08) !important;
+  border: 1px solid rgba(248,113,113,0.2) !important;
+  color: #f87171 !important; cursor: not-allowed;
+}
+
+/* ── Loading ── */
+.ac-loading {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 4rem; gap: 1rem;
+}
+.ac-loading p { color: #e1782d; font-weight: 600; margin: 0; }
+
+@media (max-width: 768px) {
+  .ac-stats { grid-template-columns: repeat(3, 1fr); }
+  .ac-table-wrap { overflow-x: auto; }
+  .products-table { white-space: nowrap; }
+}

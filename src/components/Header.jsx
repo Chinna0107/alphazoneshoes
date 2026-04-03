@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useCart } from '../context/CartContext';
+import { useUserAuth } from '../context/UserAuthContext';
 import logo from '../assets/logo2.jpeg';
 import './Header.css';
 
@@ -9,6 +10,7 @@ import './Header.css';
 logo, navigation links, and a cart icon with a count of items in the cart. */
 const Header = () => {
   const { getCartCount } = useCart();
+  const { customer } = useUserAuth();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const cartCount = getCartCount();
@@ -38,6 +40,14 @@ const Header = () => {
         <Link to="/faq" onClick={() => setIsMenuOpen(false)}>FAQ</Link>
         <Link to="/contact" onClick={() => setIsMenuOpen(false)}>Contact</Link>
         <Link to="/about" onClick={() => setIsMenuOpen(false)}>About</Link>
+        {customer ? (
+          <Link to="/dashboard" className="header-user-btn" onClick={() => setIsMenuOpen(false)}>
+            <span className="header-user-avatar">{customer.name?.[0]?.toUpperCase()}</span>
+            <span className="header-user-name">{customer.name}</span>
+          </Link>
+        ) : (
+          <Link to="/customer-login" className="header-login-btn" onClick={() => setIsMenuOpen(false)}>Login</Link>
+        )}
         <a href="#" className="cart-icon" onClick={handleCartClick}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>

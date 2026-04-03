@@ -20,53 +20,54 @@ export const CartProvider = ({ children }) => {
     try { localStorage.setItem('az_products', JSON.stringify(list)); } catch { /* silent */ }
   };
 
-  const addToCart = (productId, weight) => {
-    const cartKey = `${productId}-${weight}`;
-    console.log('Adding to cart:', cartKey);
-    setCart(prevCart => {
-      const newCart = { ...prevCart, [cartKey]: { productId, weight, quantity: 1 } };
-      console.log('New cart state:', newCart);
-      return newCart;
+  // color is optional — { name, hex }
+  const addToCart = (productId, weight, color = null) => {
+    const colorKey = color ? `${color.name || color.hex}` : '';
+    const cartKey = `${productId}-${weight}${colorKey ? `-${colorKey}` : ''}`;
+    const safeColor = color ? { name: color.name || '', hex: color.hex || '' } : null;
+    const product = productsCache.find(p => String(p.id) === String(productId));
+    const colorObj = color ? product?.colors?.find(c => c.name === color.name || c.hex === color.hex) : null;
+    const stock = colorObj?.stock?.[weight];
+    const maxQty = stock !== undefined ? Number(stock) : Infinity;
+    setCart(prev => {
+      const current = prev[cartKey]?.quantity || 0;
+      if (current >= maxQty) return prev;
+      return { ...prev, [cartKey]: { productId, weight, color: safeColor, quantity: current + 1 } };
     });
   };
 
-  const updateQuantity = (productId, weight, change) => {
-    const cartKey = `${productId}-${weight}`;
-    console.log('Updating quantity:', cartKey, change);
-    setCart(prevCart => {
-      const currentItem = prevCart[cartKey];
-      if (!currentItem) return prevCart;
-      
-      const newQuantity = currentItem.quantity + change;
-      if (newQuantity <= 0) {
-        const newCart = { ...prevCart };
-        delete newCart[cartKey];
-        console.log('Removed from cart:', newCart);
-        return newCart;
-      } else {
-        const newCart = { ...prevCart, [cartKey]: { ...currentItem, quantity: newQuantity } };
-        console.log('Updated cart:', newCart);
-        return newCart;
+  const updateQuantity = (productId, weight, change, color = null) => {
+    const colorKey = color ? `${color.name || color.hex}` : '';
+    const cartKey = `${productId}-${weight}${colorKey ? `-${colorKey}` : ''}`;
+    const product = productsCache.find(p => String(p.id) === String(productId));
+    const colorObj = color ? product?.colors?.find(c => c.name === color.name || c.hex === color.hex) : null;
+    const stock = colorObj?.stock?.[weight];
+    const maxQty = stock !== undefined ? Number(stock) : Infinity;
+    setCart(prev => {
+      const current = prev[cartKey];
+      if (!current) return prev;
+      const newQty = Math.min(current.quantity + change, maxQty);
+      if (newQty <= 0) {
+        const next = { ...prev };
+        delete next[cartKey];
+        return next;
       }
+      return { ...prev, [cartKey]: { ...current, quantity: newQty } };
     });
   };
 
-  const clearCart = () => {
-    setCart({});
+  const clearCart = () => setCart({});
+
+  const getCartCount = () => Object.values(cart).reduce((s, i) => s + i.quantity, 0);
+
+  const isInCart = (productId, weight, color = null) => {
+    const colorKey = color ? `${color.name || color.hex}` : '';
+    return !!cart[`${productId}-${weight}${colorKey ? `-${colorKey}` : ''}`];
   };
 
-  const getCartCount = () => {
-    return Object.values(cart).reduce((sum, item) => sum + item.quantity, 0);
-  };
-
-  const isInCart = (productId, weight) => {
-    const cartKey = `${productId}-${weight}`;
-    return !!cart[cartKey];
-  };
-
-  const getCartQuantity = (productId, weight) => {
-    const cartKey = `${productId}-${weight}`;
-    return cart[cartKey]?.quantity || 0;
+  const getCartQuantity = (productId, weight, color = null) => {
+    const colorKey = color ? `${color.name || color.hex}` : '';
+    return cart[`${productId}-${weight}${colorKey ? `-${colorKey}` : ''}`]?.quantity || 0;
   };
 
   return (

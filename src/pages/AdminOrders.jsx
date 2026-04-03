@@ -54,7 +54,7 @@ const AdminOrders = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const list = res.data.success ? res.data.orders : Array.isArray(res.data) ? res.data : [];
-      setOrders(list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      setOrders(list.sort((a, b) => b.id - a.id));
     } catch (err) {
       if (err.response?.status === 401) { navigate('/login'); return; }
       toast.error('Failed to fetch orders');
@@ -92,8 +92,8 @@ const AdminOrders = () => {
 
   const countByStage = (key) => key === 'all' ? orders.length : orders.filter(o => (o.orderStatus || 'pending') === key).length;
 
-  const totalRevenue = orders.reduce((s, o) => s + (Number(o.subtotal) || 0), 0);
-  const paidRevenue = orders.filter(o => o.paymentStatus === 'paid').reduce((s, o) => s + (Number(o.subtotal) || 0), 0);
+  const totalRevenue = orders.reduce((s, o) => s + (Number(o.finalTotal || o.subtotal) || 0), 0);
+  const paidRevenue = orders.filter(o => o.paymentStatus === 'paid').reduce((s, o) => s + (Number(o.finalTotal || o.subtotal) || 0), 0);
 
   const getNextStatus = (current) => {
     const idx = STAGE_FLOW.indexOf(current || 'pending');
@@ -101,9 +101,9 @@ const AdminOrders = () => {
   };
 
   const formatDate = (order) => {
-    if (order.date && order.time) return `${order.date}, ${order.time}`;
-    if (order.createdAt) return new Date(order.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-    return '—';
+    const date = order.orderDate ? new Date(order.orderDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short' }) : '—';
+    const time = order.orderTime || '';
+    return time ? `${date}, ${time}` : date;
   };
 
   return (
@@ -234,7 +234,7 @@ const AdminOrders = () => {
                             )}
                           </div>
                         </td>
-                        <td className="ao-total">₹{Number(order.subtotal || 0).toLocaleString()}</td>
+                        <td className="ao-total">₹{Number(order.finalTotal || order.subtotal || 0).toLocaleString()}</td>
                         <td>
                           <span className="ao-pay-badge" style={{ color: pc.color }}>
                             {order.paymentStatus === 'paid' ? '✅ Paid' : '⏳ Pending'}
@@ -344,8 +344,8 @@ const AdminOrders = () => {
                 {selectedOrder.razorpayOrderId && (
                   <p><span>Order ID</span><strong className="ao-txn-id">{selectedOrder.razorpayOrderId}</strong></p>
                 )}
-                <p><span>Date</span><strong>{selectedOrder.date || new Date(selectedOrder.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</strong></p>
-                <p><span>Time</span><strong>{selectedOrder.time || new Date(selectedOrder.createdAt).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}</strong></p>
+                <p><span>Date</span><strong>{selectedOrder.orderDate ? new Date(selectedOrder.orderDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short' }) : '—'}</strong></p>
+                <p><span>Time</span><strong>{selectedOrder.orderTime || '—'}</strong></p>
               </div>
             </div>
 
@@ -367,10 +367,14 @@ const AdminOrders = () => {
               ))}
               <div className="ao-modal-totals">
                 {selectedOrder.totalSavings > 0 && (
-                  <div className="ao-modal-row savings"><span>🎉 Savings</span><span>−₹{selectedOrder.totalSavings}</span></div>
+                  <div className="ao-modal-row savings"><span>🎉 Product Savings</span><span>−₹{selectedOrder.totalSavings}</span></div>
                 )}
+                {selectedOrder.couponDiscount > 0 && (
+                  <div className="ao-modal-row savings"><span>🏷️ Coupon ({selectedOrder.couponCode})</span><span>−₹{selectedOrder.couponDiscount}</span></div>
+                )}
+                <div className="ao-modal-row"><span>Subtotal</span><span>₹{Number(selectedOrder.subtotal || 0).toLocaleString()}</span></div>
                 <div className="ao-modal-row"><span>Delivery</span><span className="co-free">FREE</span></div>
-                <div className="ao-modal-total"><span>Total</span><span>₹{Number(selectedOrder.subtotal || 0).toLocaleString()}</span></div>
+                <div className="ao-modal-total"><span>Total Paid</span><span>₹{Number(selectedOrder.finalTotal || selectedOrder.subtotal || 0).toLocaleString()}</span></div>
               </div>
             </div>
 

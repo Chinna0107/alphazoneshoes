@@ -80,6 +80,23 @@ const Home = () => {
             </Slider>
           </div>
 
+          {/* Mobile Categories Strip */}
+          <section className="mob-categories-section">
+            <h2 className="section-title">Shop by Category</h2>
+            <div className="mob-cat-scroll">
+              {CATEGORIES.map(cat => (
+                <div key={cat.name} className="mob-cat-card" onClick={() => navigate('/products', { state: { category: cat.name } })}>
+                  {cat.reactIcon
+                    ? <PiPantsFill className="mob-cat-react-icon" />
+                    : <span className="mob-cat-icon">{cat.icon}</span>
+                  }
+                  <h3>{cat.name}</h3>
+                  <span className="mob-cat-arrow">→</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
           {/* Categories */}
           <section className="categories-section">
             <h2 className="section-title">Shop by Category</h2>
@@ -97,28 +114,6 @@ const Home = () => {
                   <span className="cat-arrow">→</span>
                 </div>
               ))}
-            </div>
-          </section>
-
-          {/* Special Offers */}
-          <section className="offers-section">
-            <h2 className="section-title">🔥 Hot Deals</h2>
-            <div className="offers-grid">
-              <div className="offer-card glass offer-1" style={{cursor:"pointer"}} onClick={() => navigate("/products", { state: { category: "Shoes" } })}>
-                <div className="offer-badge">40% OFF</div>
-                <h3>👟 Shoes Collection</h3>
-                <p>Premium sneakers & formal shoes at unbeatable prices</p>
-              </div>
-              <div className="offer-card glass offer-2" style={{cursor:"pointer"}} onClick={() => navigate("/products", { state: { category: "T-Shirts" } })}>
-                <div className="offer-badge">NEW</div>
-                <h3>👕 Summer Tees</h3>
-                <p>Fresh arrivals — breathable cotton tshirts</p>
-              </div>
-              <div className="offer-card glass offer-3" style={{cursor:"pointer"}} onClick={() => navigate("/products", { state: { category: "Slippers" } })}>
-                <div className="offer-badge">COMBO</div>
-                <h3>🩴 Slipper + Sandal</h3>
-                <p>Buy any 2 footwear & save big</p>
-              </div>
             </div>
           </section>
 
@@ -218,6 +213,28 @@ const Home = () => {
               </div>
             </section>
           )}
+
+          {/* Hot Deals */}
+          <section className="offers-section">
+            <h2 className="section-title">🔥 Hot Deals</h2>
+            <div className="offers-grid">
+              <div className="offer-card glass offer-1" style={{cursor:"pointer"}} onClick={() => navigate("/products", { state: { category: "Shoes" } })}>
+                <div className="offer-badge">40% OFF</div>
+                <h3>👟 Shoes Collection</h3>
+                <p>Premium sneakers & formal shoes at unbeatable prices</p>
+              </div>
+              <div className="offer-card glass offer-2" style={{cursor:"pointer"}} onClick={() => navigate("/products", { state: { category: "T-Shirts" } })}>
+                <div className="offer-badge">NEW</div>
+                <h3>👕 Summer Tees</h3>
+                <p>Fresh arrivals — breathable cotton tshirts</p>
+              </div>
+              <div className="offer-card glass offer-3" style={{cursor:"pointer"}} onClick={() => navigate("/products", { state: { category: "Slippers" } })}>
+                <div className="offer-badge">COMBO</div>
+                <h3>🩴 Slipper + Sandal</h3>
+                <p>Buy any 2 footwear & save big</p>
+              </div>
+            </div>
+          </section>
 
           {/* Testimonials */}
           <section className="testimonials-section">

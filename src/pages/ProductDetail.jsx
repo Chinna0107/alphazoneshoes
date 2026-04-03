@@ -32,6 +32,7 @@ const ProductDetail = () => {
   const { products: allProducts, loading } = useProducts();
   const [product, setProduct] = useState(null);
   const [selectedSize, setSelectedSize] = useState('');
+  const [activeColorIdx, setActiveColorIdx] = useState(0);
   const [activeImg, setActiveImg] = useState(0);
   const [zoomed, setZoomed] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
@@ -48,6 +49,8 @@ const ProductDetail = () => {
     if (found) {
       setProduct(found);
       setSelectedSize(Array.isArray(found.grams) ? found.grams[0] : found.grams || '');
+      setActiveColorIdx(0);
+      setActiveImg(0);
     }
   }, [allProducts, id]);
 
@@ -81,8 +84,22 @@ const ProductDetail = () => {
   const salePrice = product.prices?.[selectedSize] || product.price || 0;
   const origPrice = product.originalPrices?.[selectedSize];
   const discount = calcDiscount(origPrice, salePrice);
-  const images = product.images.filter(Boolean);
+  const colors  = product.colors?.length ? product.colors : null;
+  const activeColor = colors?.[activeColorIdx] ? { name: colors[activeColorIdx].name || '', hex: colors[activeColorIdx].hex || '' } : null;
+  const images  = (colors?.[activeColorIdx]?.images?.filter(Boolean) || product.images || []).filter(Boolean);
   const savings = discount && origPrice ? Number(origPrice) - Number(salePrice) : null;
+
+  // stock helpers
+  const getStock = (colorIdx, size) => {
+    const c = product.colors?.[colorIdx];
+    if (!c) return Infinity; // no color = no stock tracking
+    if (!c.stock) return Infinity;
+    const s = c.stock[size];
+    return s === undefined ? Infinity : Number(s);
+  };
+  const activeStock = getStock(activeColorIdx, selectedSize);
+  const inCartQty   = getCartQuantity(product.id, selectedSize, activeColor);
+  const canAddMore  = activeStock === Infinity || inCartQty < activeStock;
 
   const related = allProducts
     .filter(p => p.category === product.category && String(p.id) !== String(product.id))
@@ -166,6 +183,24 @@ const ProductDetail = () => {
             <span className="pd-category-pill">{product.category}</span>
             <h1 className="pd-name">{product.name}</h1>
 
+            {/* Color Swatches */}
+            {colors && colors.length > 1 && (
+              <div className="pd-colors">
+                <span className="pd-color-label">Color: <strong>{activeColor?.name || ''}</strong></span>
+                <div className="pd-color-swatches">
+                  {colors.map((c, ci) => (
+                    <button
+                      key={ci}
+                      className={`pd-color-swatch ${activeColorIdx === ci ? 'active' : ''}`}
+                      style={{ background: c.hex }}
+                      title={c.name}
+                      onClick={() => { setActiveColorIdx(ci); setActiveImg(0); }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Rating */}
             <div className="pd-rating-row">
               <div className="pd-stars">
@@ -173,7 +208,12 @@ const ProductDetail = () => {
               </div>
               <span className="pd-rating-val">4.5</span>
               <span className="pd-rating-count">(24 reviews)</span>
-              <span className="pd-in-stock">✓ In Stock</span>
+              {activeStock === 0
+                ? <span className="pd-out-of-stock">✕ Out of Stock</span>
+                : activeStock <= 5 && activeStock !== Infinity
+                  ? <span className="pd-low-stock">⚠️ Only {activeStock} left!</span>
+                  : <span className="pd-in-stock">✓ In Stock</span>
+              }
             </div>
 
             {/* Price */}
@@ -204,15 +244,20 @@ const ProductDetail = () => {
                   const sp = product.prices?.[size] || product.price || 0;
                   const op = product.originalPrices?.[size];
                   const d = calcDiscount(op, sp);
+                  const stock = getStock(activeColorIdx, size);
+                  const outOfStock = stock === 0;
                   return (
                     <button
                       key={size}
-                      className={`pd-size-btn ${selectedSize === size ? 'active' : ''}`}
-                      onClick={() => setSelectedSize(size)}
+                      className={`pd-size-btn ${selectedSize === size ? 'active' : ''} ${outOfStock ? 'out-of-stock' : ''}`}
+                      onClick={() => !outOfStock && setSelectedSize(size)}
+                      disabled={outOfStock}
+                      title={outOfStock ? 'Out of stock' : ''}
                     >
                       <span className="pd-size-val">{size}</span>
                       <span className="pd-size-price">₹{sp}</span>
-                      {d && <span className="pd-size-disc">-{d}%</span>}
+                      {d && !outOfStock && <span className="pd-size-disc">-{d}%</span>}
+                      {outOfStock && <span className="pd-size-oos">Out</span>}
                     </button>
                   );
                 })}
@@ -221,18 +266,26 @@ const ProductDetail = () => {
 
             {/* Cart Actions */}
             <div className="pd-cart-row">
-              {!isInCart(product.id, selectedSize) ? (
-                <button className="pd-add-btn" onClick={() => addToCart(product.id, selectedSize)}>
+              {activeStock === 0 ? (
+                <button className="pd-add-btn" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+                  ✕ Out of Stock
+                </button>
+              ) : !isInCart(product.id, selectedSize, activeColor) ? (
+                <button className="pd-add-btn" onClick={() => addToCart(product.id, selectedSize, activeColor)}>
                   🛒 Add to Cart
                 </button>
               ) : (
                 <div className="pd-qty-control">
-                  <button onClick={() => updateQuantity(product.id, selectedSize, -1)}>−</button>
-                  <span>{getCartQuantity(product.id, selectedSize)}</span>
-                  <button onClick={() => updateQuantity(product.id, selectedSize, 1)}>+</button>
+                  <button onClick={() => updateQuantity(product.id, selectedSize, -1, activeColor)}>−</button>
+                  <span>{getCartQuantity(product.id, selectedSize, activeColor)}</span>
+                  <button
+                    onClick={() => updateQuantity(product.id, selectedSize, 1, activeColor)}
+                    disabled={!canAddMore}
+                    title={!canAddMore ? 'Max stock reached' : ''}
+                  >+</button>
                 </div>
               )}
-              <button className="pd-buy-btn" onClick={() => navigate('/checkout')}>
+              <button className="pd-buy-btn" onClick={() => navigate('/checkout')} disabled={activeStock === 0}>
                 ⚡ Buy Now
               </button>
             </div>
@@ -265,6 +318,9 @@ const ProductDetail = () => {
               {tab === 'details' && (
                 <div className="pd-details-table">
                   <div className="pd-detail-row"><span>Category</span><span>{product.category}</span></div>
+                  {product.gender && <div className="pd-detail-row"><span>Gender</span><span>{product.gender}</span></div>}
+                  {colors && <div className="pd-detail-row"><span>Colors</span><span>{colors.map(c => c.name).filter(Boolean).join(', ') || colors.length + ' colors'}</span></div>}
+                  {product.styleTags?.length > 0 && <div className="pd-detail-row"><span>Style</span><span>{product.styleTags.join(', ')}</span></div>}
                   <div className="pd-detail-row"><span>Available Sizes</span><span>{sizes.join(', ')}</span></div>
                   <div className="pd-detail-row"><span>Tag</span><span>{TAG_LABELS[product.tag] || '—'}</span></div>
                   <div className="pd-detail-row"><span>SKU</span><span>AZ-{String(product.id).padStart(4, '0')}</span></div>

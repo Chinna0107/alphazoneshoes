@@ -21,87 +21,181 @@ const loadRazorpay = () =>
 const Checkout = () => {
   const { cart, updateQuantity, clearCart, productsCache, cacheProducts } = useCart();
   const navigate = useNavigate();
-  const [allProducts, setAllProducts] = useState(productsCache);
-  const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState({ name: '', phone: '', email: '', address: '' });
-  const [placing, setPlacing] = useState(false);
+  const [allProducts, setAllProducts]   = useState(productsCache);
+  const [step, setStep]                 = useState(0);
+  const [formData, setFormData]         = useState({ name: '', phone: '', email: '', address: '' });
+  const [placing, setPlacing]           = useState(false);
+  const [orderDone, setOrderDone]       = useState(false);
+  const [orderDetails, setOrderDetails] = useState(null);
+  const [locating, setLocating]         = useState(false);
 
-  const [orderDone, setOrderDone] = useState(false);
-  const [orderDetails, setOrderDetails] = useState(null); // stores snapshot for success page
+  const getLocation = () => {
+    if (!navigator.geolocation) { alert('Geolocation not supported by your browser.'); return; }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${coords.latitude}&lon=${coords.longitude}&format=json`
+          );
+          const data = await res.json();
+          const a = data.address || {};
+          const parts = [
+            a.house_number,
+            a.road || a.pedestrian || a.footway,
+            a.neighbourhood || a.suburb,
+            a.city || a.town || a.village || a.county,
+            a.state,
+            a.postcode,
+          ].filter(Boolean);
+          setFormData(prev => ({ ...prev, address: parts.join(', ') }));
+        } catch {
+          alert('Could not fetch address. Please enter manually.');
+        } finally { setLocating(false); }
+      },
+      () => { alert('Location access denied. Please enter address manually.'); setLocating(false); },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  // Coupon
+  const [couponCode, setCouponCode]     = useState('');
+  const [couponInput, setCouponInput]   = useState('');
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponType, setCouponType]     = useState(''); // 'percent' | 'flat'
+  const [couponMsg, setCouponMsg]       = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
 
   useEffect(() => {
     axios.get(`${config.API_URL}/api/products`)
       .then(res => {
         const list = res.data.success ? res.data.products : Array.isArray(res.data) ? res.data : [];
         if (list.length) { setAllProducts(list); cacheProducts(list); }
-      })
-      .catch(() => {});
+      }).catch(() => {});
   }, []);
 
   const cartItems = Object.values(cart).map(item => {
     const product = allProducts.find(p => String(p.id) === String(item.productId));
     if (!product) return null;
     const price = product.prices?.[item.weight] || product.price || 0;
-    const orig = product.originalPrices?.[item.weight];
-    return { ...product, quantity: item.quantity, selectedWeight: item.weight, selectedPrice: price, origPrice: orig };
+    const orig  = product.originalPrices?.[item.weight];
+    // resolve color image
+    const colorImages = item.color
+      ? product.colors?.find(c => c.name === item.color.name || c.hex === item.color.hex)?.images
+      : null;
+    const displayImage = colorImages?.[0] || product.images?.[0] || '';
+    return { ...product, quantity: item.quantity, selectedWeight: item.weight, selectedPrice: price, origPrice: orig, selectedColor: item.color, displayImage };
   }).filter(Boolean);
 
-  const subtotal = cartItems.reduce((s, i) => s + i.selectedPrice * i.quantity, 0);
+  const subtotal     = cartItems.reduce((s, i) => s + i.selectedPrice * i.quantity, 0);
   const totalSavings = cartItems.reduce((s, i) => {
     const o = Number(i.origPrice), p = Number(i.selectedPrice);
     return o > p ? s + (o - p) * i.quantity : s;
   }, 0);
 
+  // Coupon discount amount
+  const couponAmount = couponDiscount > 0
+    ? couponType === 'percent' ? Math.max(1, Math.floor(subtotal * couponDiscount / 100)) : Math.min(couponDiscount, subtotal)
+    : 0;
+  const finalTotal = Math.max(subtotal - couponAmount, 0);
+
   const isDetailsValid = formData.name && formData.phone && formData.email && formData.address;
 
-  // ── Build order payload ──
-  const buildOrderPayload = (paymentInfo = {}) => ({
-    customer: {
-      name: formData.name,
-      phone: formData.phone,
-      email: formData.email,
-      address: formData.address,
-    },
-    items: cartItems.map(i => ({
-      productId: i.id,
-      name: i.name,
-      category: i.category,
-      size: i.selectedWeight,
-      quantity: i.quantity,
-      price: i.selectedPrice,
-      total: i.selectedPrice * i.quantity,
-      image: i.images?.[0] || '',
-    })),
-    subtotal,
-    totalSavings,
-    paymentMethod: paymentInfo.method || 'whatsapp',
-    paymentStatus: paymentInfo.status || 'pending',
-    razorpayPaymentId: paymentInfo.razorpayPaymentId || null,
-    razorpayOrderId: paymentInfo.razorpayOrderId || null,
-    razorpaySignature: paymentInfo.razorpaySignature || null,
-    createdAt: new Date().toISOString(),
-    date: new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' }),
-    time: new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }),
-  });
-
-  // ── Save order to backend ──
-  const saveOrder = async (payload) => {
+  // ── Apply Coupon ──
+  const applyCoupon = async () => {
+    if (!couponInput.trim()) return;
+    setCouponLoading(true); setCouponMsg('');
     try {
-      await axios.post(`${config.API_URL}/api/orders`, payload);
-    } catch { /* silent — don't block user flow */ }
+      const res = await axios.post(`${config.API_URL}/api/coupons/validate`, {
+        code: couponInput.trim().toUpperCase(),
+        subtotal,
+        phone: formData.phone || '',
+      });
+      if (res.data.valid) {
+        const disc = res.data.discount;
+        const type = res.data.type;
+        const amount = type === 'percent'
+          ? Math.max(1, Math.floor(subtotal * disc / 100))
+          : Math.min(disc, subtotal);
+        setCouponCode(couponInput.trim().toUpperCase());
+        setCouponDiscount(disc);
+        setCouponType(type);
+        setCouponMsg(`✅ Coupon applied! You save ₹${amount}`);
+      } else {
+        setCouponMsg(`❌ ${res.data.message || 'Invalid coupon'}`);
+        setCouponDiscount(0); setCouponCode('');
+      }
+    } catch {
+      setCouponMsg('❌ Failed to validate coupon. Try again.');
+      setCouponDiscount(0); setCouponCode('');
+    } finally { setCouponLoading(false); }
   };
 
-  // ── Razorpay handler ──
+  const removeCoupon = () => {
+    setCouponCode(''); setCouponInput(''); setCouponDiscount(0); setCouponType(''); setCouponMsg('');
+  };
+
+  // ── Build order payload ──
+  const buildOrderPayload = (paymentInfo = {}) => {
+    return {
+      customer: { name: formData.name, phone: formData.phone, email: formData.email, address: formData.address },
+      items: cartItems.map(i => ({
+        productId: i.id, name: i.name, category: i.category,
+        size: i.selectedWeight,
+        color: i.selectedColor || null,
+        quantity: i.quantity, price: i.selectedPrice,
+        total: i.selectedPrice * i.quantity,
+        image: i.displayImage,
+      })),
+      subtotal,
+      couponCode: couponCode || null,
+      couponDiscount: couponAmount,
+      totalSavings,
+      finalTotal,
+      paymentMethod: paymentInfo.method || 'razorpay',
+      paymentStatus: paymentInfo.status || 'pending',
+      razorpayPaymentId: paymentInfo.razorpayPaymentId || null,
+      razorpayOrderId:   paymentInfo.razorpayOrderId   || null,
+      razorpaySignature: paymentInfo.razorpaySignature  || null,
+      createdAt: new Date().toISOString(),
+      date: new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' }),
+      time: new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }),
+    };
+  };
+
+  const saveOrder = async (payload) => {
+    try {
+      const res = await axios.post(`${config.API_URL}/api/orders`, payload);
+      // Decrease stock per color+size for each ordered item
+      await Promise.allSettled(
+        payload.items.map(item =>
+          axios.patch(`${config.API_URL}/api/products/${item.productId}/stock`, {
+            colorName: item.color?.name || null,
+            colorHex: item.color?.hex || null,
+            size: item.size,
+            decrease: item.quantity,
+          })
+        )
+      );
+      // Record coupon usage
+      if (payload.couponCode && payload.customer.phone) {
+        await axios.post(`${config.API_URL}/api/coupons/use`, {
+          code: payload.couponCode,
+          phone: payload.customer.phone,
+          orderId: res.data.orderId,
+        });
+      }
+    } catch { /* silent */ }
+  };
+
+  // ── Razorpay ──
   const handleRazorpay = async () => {
     setPlacing(true);
     const ok = await loadRazorpay();
-    if (!ok) { alert('Failed to load Razorpay. Please try WhatsApp order.'); setPlacing(false); return; }
-
+    if (!ok) { alert('Failed to load Razorpay.'); setPlacing(false); return; }
     try {
-      // Step 1: Create order on backend
-      const { data } = await axios.post(`${config.API_URL}/api/orders/razorpay/create`, { amount: subtotal });
+      const { data } = await axios.post(`${config.API_URL}/api/orders/razorpay/create`, { amount: finalTotal });
       if (!data.success) throw new Error('Order creation failed');
-
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: data.order.amount,
@@ -113,85 +207,88 @@ const Checkout = () => {
         notes: { address: formData.address },
         theme: { color: '#e1782d' },
         handler: async (response) => {
-          // Step 2: Verify signature on backend
           const verify = await axios.post(`${config.API_URL}/api/orders/razorpay/verify`, {
-            razorpay_order_id: response.razorpay_order_id,
+            razorpay_order_id:   response.razorpay_order_id,
             razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature,
+            razorpay_signature:  response.razorpay_signature,
           });
           if (!verify.data.verified) { alert('Payment verification failed!'); setPlacing(false); return; }
-
-          // Step 3: Save order
-          const payload = buildOrderPayload({
-            method: 'razorpay',
-            status: 'paid',
-            razorpayPaymentId: response.razorpay_payment_id,
-            razorpayOrderId: response.razorpay_order_id,
-            razorpaySignature: response.razorpay_signature,
-          });
+          const payload = buildOrderPayload({ method: 'razorpay', status: 'paid', razorpayPaymentId: response.razorpay_payment_id, razorpayOrderId: response.razorpay_order_id, razorpaySignature: response.razorpay_signature });
           await saveOrder(payload);
           setOrderDetails({ ...payload, items: cartItems });
-          clearCart();
-          setOrderDone(true);
-          setPlacing(false);
+          clearCart(); setOrderDone(true); setPlacing(false);
         },
         modal: { ondismiss: () => setPlacing(false) },
       };
       new window.Razorpay(options).open();
-    } catch (error) {
-      alert('Error initiating payment. Please try again.');
-      setPlacing(false);
-    }
+    } catch { alert('Error initiating payment.'); setPlacing(false); }
   };
 
-  // ── Success Page ──
+  // ── Mini Summary (reused in steps 1 & 2) ──
+  const MiniSummary = () => (
+    <div className="co-mini-summary glass">
+      <h3>Order Summary</h3>
+      <div className="co-mini-items">
+        {cartItems.map((item, i) => (
+          <div key={i} className="co-mini-item">
+            <img src={item.displayImage} alt={item.name} />
+            <div>
+              <p>{item.name}</p>
+              <span>
+                {item.selectedWeight}
+                {item.selectedColor && <span className="co-mini-color" style={{ background: item.selectedColor.hex }} title={item.selectedColor.name} />}
+                × {item.quantity}
+              </span>
+            </div>
+            <strong>₹{item.selectedPrice * item.quantity}</strong>
+          </div>
+        ))}
+      </div>
+      <div className="co-mini-total">
+        {totalSavings > 0 && <div className="co-sum-row savings"><span>🎉 Savings</span><span>−₹{totalSavings}</span></div>}
+        {couponAmount > 0 && <div className="co-sum-row savings"><span>🏷️ Coupon ({couponCode})</span><span>−₹{couponAmount}</span></div>}
+        <div className="co-sum-row"><span>Delivery</span><span className="co-free">FREE</span></div>
+        <div className="co-sum-total"><span>Total</span><span>₹{finalTotal}</span></div>
+      </div>
+    </div>
+  );
+
+  // ── Success ──
   if (orderDone && orderDetails) return (
     <div className="co-success-page">
       <div className="co-success-container">
-
-        {/* Header */}
         <div className="co-success-header">
-          <div className="co-success-icon-wrap">
-            <MdCheckCircle className="co-success-icon" />
-          </div>
+          <div className="co-success-icon-wrap"><MdCheckCircle className="co-success-icon" /></div>
           <h1>Order Placed Successfully! 🎉</h1>
-          <p className="co-success-sub">
-            Thank you, <strong>{orderDetails.customer.name}</strong>! Your order has been received and is being processed.
-          </p>
-          {orderDetails.paymentMethod === 'razorpay' && orderDetails.razorpayPaymentId && (
-            <div className="co-success-txn">
-              <span>Payment ID:</span> <strong>{orderDetails.razorpayPaymentId}</strong>
-            </div>
-          )}
+          <p className="co-success-sub">Thank you, <strong>{orderDetails.customer.name}</strong>! Your order has been received.</p>
+          {orderDetails.razorpayPaymentId && <div className="co-success-txn"><span>Payment ID:</span> <strong>{orderDetails.razorpayPaymentId}</strong></div>}
         </div>
-
         <div className="co-success-grid">
-
-          {/* Ordered Items */}
           <div className="co-success-items glass">
             <h3>🛍️ Your Items</h3>
             <div className="co-success-item-list">
               {orderDetails.items.map((item, i) => (
                 <div key={i} className="co-success-item">
-                  <img src={item.images?.[0] || item.image} alt={item.name} />
+                  <img src={item.displayImage || item.image} alt={item.name} />
                   <div className="co-success-item-info">
                     <p>{item.name}</p>
-                    <span>{item.selectedWeight} × {item.quantity}</span>
+                    <span>
+                      {item.selectedWeight || item.size}
+                      {item.selectedColor && <span className="co-mini-color" style={{ background: item.selectedColor.hex }} title={item.selectedColor.name} />}
+                      × {item.quantity}
+                    </span>
                   </div>
                   <strong>₹{item.selectedPrice * item.quantity}</strong>
                 </div>
               ))}
             </div>
             <div className="co-success-totals">
-              {orderDetails.totalSavings > 0 && (
-                <div className="co-success-row savings"><span>🎉 You Saved</span><span>−₹{orderDetails.totalSavings}</span></div>
-              )}
+              {orderDetails.totalSavings > 0 && <div className="co-success-row savings"><span>🎉 You Saved</span><span>−₹{orderDetails.totalSavings}</span></div>}
+              {orderDetails.couponDiscount > 0 && <div className="co-success-row savings"><span>🏷️ Coupon ({orderDetails.couponCode})</span><span>−₹{orderDetails.couponDiscount}</span></div>}
               <div className="co-success-row"><span>Delivery</span><span className="co-free">FREE</span></div>
-              <div className="co-success-total-row"><span>Total Paid</span><span>₹{orderDetails.subtotal}</span></div>
+              <div className="co-success-total-row"><span>Total Paid</span><span>₹{orderDetails.finalTotal}</span></div>
             </div>
           </div>
-
-          {/* Delivery & Payment Info */}
           <div className="co-success-right">
             <div className="co-success-delivery glass">
               <h3>📍 Delivery Details</h3>
@@ -200,28 +297,17 @@ const Checkout = () => {
               <p><span>Email</span><strong>{orderDetails.customer.email}</strong></p>
               <p><span>Address</span><strong>{orderDetails.customer.address}</strong></p>
             </div>
-
             <div className="co-success-payment glass">
               <h3>💳 Payment Info</h3>
               <p><span>Method</span><strong>Online (Razorpay)</strong></p>
-              <p><span>Status</span>
-                <strong className={orderDetails.paymentStatus === 'paid' ? 'co-paid' : 'co-pending'}>
-                  {orderDetails.paymentStatus === 'paid' ? '✅ Paid' : '⏳ Pending'}
-                </strong>
-              </p>
+              <p><span>Status</span><strong className={orderDetails.paymentStatus === 'paid' ? 'co-paid' : 'co-pending'}>{orderDetails.paymentStatus === 'paid' ? '✅ Paid' : '⏳ Pending'}</strong></p>
             </div>
-
             <div className="co-success-msg glass">
-              <p>🚚 Your order will be delivered within <strong>2–3 business days</strong>.</p>
-              <p>📞 Our team will call you at <strong>{orderDetails.customer.phone}</strong> to confirm.</p>
-              <p>For any queries, reach us on WhatsApp at <strong>+91 8885553249</strong>.</p>
+              <p>🚚 Delivered within <strong>2–3 business days</strong>.</p>
+              <p>📞 We'll call <strong>{orderDetails.customer.phone}</strong> to confirm.</p>
             </div>
-
-            <button className="co-success-shop-btn" onClick={() => navigate('/products')}>
-              Continue Shopping →
-            </button>
+            <button className="co-success-shop-btn" onClick={() => navigate('/products')}>Continue Shopping →</button>
           </div>
-
         </div>
       </div>
     </div>
@@ -230,8 +316,7 @@ const Checkout = () => {
   // ── Empty Cart ──
   if (cartItems.length === 0 && allProducts.length > 0) return (
     <div className="co-empty">
-      <span>🛒</span>
-      <h2>Your cart is empty</h2>
+      <span>🛒</span><h2>Your cart is empty</h2>
       <p>Looks like you haven't added anything yet.</p>
       <button onClick={() => navigate('/products')}>← Continue Shopping</button>
     </div>
@@ -241,12 +326,9 @@ const Checkout = () => {
     <div className="co-page">
       <div className="co-container">
 
-        {/* Breadcrumb */}
         <nav className="co-breadcrumb">
-          <span onClick={() => navigate('/')}>Home</span>
-          <span>›</span>
-          <span onClick={() => navigate('/products')}>Shop</span>
-          <span>›</span>
+          <span onClick={() => navigate('/')}>Home</span><span>›</span>
+          <span onClick={() => navigate('/products')}>Shop</span><span>›</span>
           <span className="co-bc-active">Checkout</span>
         </nav>
 
@@ -254,9 +336,7 @@ const Checkout = () => {
         <div className="co-stepper">
           {STEPS.map((label, i) => (
             <div key={i} className={`co-step ${i === step ? 'active' : ''} ${i < step ? 'done' : ''}`}>
-              <div className="co-step-circle">
-                {i < step ? <MdCheckCircle /> : <span>{i + 1}</span>}
-              </div>
+              <div className="co-step-circle">{i < step ? <MdCheckCircle /> : <span>{i + 1}</span>}</div>
               <span className="co-step-label">{label}</span>
               {i < STEPS.length - 1 && <div className={`co-step-line ${i < step ? 'done' : ''}`} />}
             </div>
@@ -267,47 +347,74 @@ const Checkout = () => {
         {step === 0 && (
           <div className="co-step-content">
             <div className="co-items">
-              {cartItems.map(item => {
+              {cartItems.map((item, idx) => {
                 const disc = item.origPrice && Number(item.origPrice) > Number(item.selectedPrice)
-                  ? Math.round(((Number(item.origPrice) - Number(item.selectedPrice)) / Number(item.origPrice)) * 100)
-                  : null;
+                  ? Math.round(((Number(item.origPrice) - Number(item.selectedPrice)) / Number(item.origPrice)) * 100) : null;
                 return (
-                  <div key={`${item.id}-${item.selectedWeight}`} className="co-item glass">
+                  <div key={idx} className="co-item glass">
                     <div className="co-item-img">
-                      <img src={item.images[0]} alt={item.name} />
+                      <img src={item.displayImage} alt={item.name} />
                       {disc && <span className="co-item-disc">-{disc}%</span>}
                     </div>
                     <div className="co-item-info">
                       <span className="co-item-cat">{item.category}</span>
                       <h3>{item.name}</h3>
-                      <span className="co-item-size">Size: {item.selectedWeight}</span>
-                      <div className="co-item-price-row">
-                        {item.origPrice && Number(item.origPrice) > Number(item.selectedPrice) && (
-                          <span className="co-item-orig">₹{item.origPrice}</span>
+                      <span className="co-item-size">
+                        Size: {item.selectedWeight}
+                        {item.selectedColor && (
+                          <span className="co-item-color-dot" style={{ background: item.selectedColor.hex }} title={item.selectedColor.name} />
                         )}
+                        {item.selectedColor?.name && <span className="co-item-color-name">{item.selectedColor.name}</span>}
+                      </span>
+                      <div className="co-item-price-row">
+                        {item.origPrice && Number(item.origPrice) > Number(item.selectedPrice) && <span className="co-item-orig">₹{item.origPrice}</span>}
                         <span className="co-item-price">₹{item.selectedPrice}</span>
                       </div>
                     </div>
                     <div className="co-item-right">
                       <div className="co-qty">
-                        <button onClick={() => updateQuantity(item.id, item.selectedWeight, -1)}>−</button>
+                        <button onClick={() => updateQuantity(item.id, item.selectedWeight, -1, item.selectedColor)}>−</button>
                         <span>{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.id, item.selectedWeight, 1)}>+</button>
+                        <button onClick={() => updateQuantity(item.id, item.selectedWeight, 1, item.selectedColor)}>+</button>
                       </div>
                       <span className="co-item-total">₹{item.selectedPrice * item.quantity}</span>
-                      <button className="co-remove" onClick={() => updateQuantity(item.id, item.selectedWeight, -item.quantity)} title="Remove">
-                        <MdDelete />
-                      </button>
+                      <button className="co-remove" onClick={() => updateQuantity(item.id, item.selectedWeight, -item.quantity, item.selectedColor)} title="Remove"><MdDelete /></button>
                     </div>
                   </div>
                 );
               })}
             </div>
+
+            {/* Coupon */}
+            <div className="co-coupon glass">
+              <h4>🏷️ Have a coupon?</h4>
+              {couponCode ? (
+                <div className="co-coupon-applied">
+                  <span>✅ <strong>{couponCode}</strong> applied — saving ₹{couponAmount}</span>
+                  <button className="co-coupon-remove" onClick={removeCoupon}>Remove</button>
+                </div>
+              ) : (
+                <div className="co-coupon-row">
+                  <input
+                    type="text" placeholder="Enter coupon code"
+                    value={couponInput}
+                    onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponMsg(''); }}
+                    onKeyDown={e => e.key === 'Enter' && applyCoupon()}
+                  />
+                  <button className="co-coupon-btn" onClick={applyCoupon} disabled={couponLoading || !couponInput.trim()}>
+                    {couponLoading ? '...' : 'Apply'}
+                  </button>
+                </div>
+              )}
+              {couponMsg && <p className={`co-coupon-msg ${couponMsg.startsWith('✅') ? 'success' : 'error'}`}>{couponMsg}</p>}
+            </div>
+
             <div className="co-summary-bar glass">
               <div className="co-summary-info">
                 <span>{cartItems.length} item{cartItems.length > 1 ? 's' : ''}</span>
                 {totalSavings > 0 && <span className="co-saving-pill">🎉 Saving ₹{totalSavings}</span>}
-                <span className="co-sum-total-inline">Total: <strong>₹{subtotal}</strong></span>
+                {couponAmount > 0 && <span className="co-saving-pill">🏷️ −₹{couponAmount}</span>}
+                <span className="co-sum-total-inline">Total: <strong>₹{finalTotal}</strong></span>
               </div>
               <div className="co-step-actions">
                 <button className="co-back-btn" onClick={() => navigate('/products')}><MdArrowBack /> Back to Shop</button>
@@ -324,25 +431,28 @@ const Checkout = () => {
               <h2>Delivery Details</h2>
               <div className="co-form">
                 {[
-                  { key: 'name', label: 'Full Name', type: 'text', icon: '👤', placeholder: 'Enter your name' },
-                  { key: 'phone', label: 'Phone Number', type: 'tel', icon: '📞', placeholder: '+91 XXXXX XXXXX' },
-                  { key: 'email', label: 'Email Address', type: 'email', icon: '✉️', placeholder: 'you@example.com' },
+                  { key: 'name',    label: 'Full Name',       type: 'text',  icon: '👤', placeholder: 'Enter your name' },
+                  { key: 'phone',   label: 'Phone Number',    type: 'tel',   icon: '📞', placeholder: '+91 XXXXX XXXXX' },
+                  { key: 'email',   label: 'Email Address',   type: 'email', icon: '✉️', placeholder: 'you@example.com' },
                 ].map(f => (
                   <div key={f.key} className="co-field">
                     <label>{f.label}</label>
                     <div className="co-input-wrap">
                       <span className="co-input-icon">{f.icon}</span>
-                      <input type={f.type} placeholder={f.placeholder} value={formData[f.key]}
-                        onChange={e => setFormData({ ...formData, [f.key]: e.target.value })} />
+                      <input type={f.type} placeholder={f.placeholder} value={formData[f.key]} onChange={e => setFormData({ ...formData, [f.key]: e.target.value })} />
                     </div>
                   </div>
                 ))}
                 <div className="co-field">
-                  <label>Delivery Address</label>
+                  <label>
+                    Delivery Address
+                    <button type="button" className="co-locate-btn" onClick={getLocation} disabled={locating}>
+                      {locating ? <><span className="co-spinner" /> Locating...</> : '📍 Use My Location'}
+                    </button>
+                  </label>
                   <div className="co-input-wrap">
                     <span className="co-input-icon" style={{ top: '0.9rem' }}>📍</span>
-                    <textarea placeholder="House no, Street, City, Pincode" value={formData.address}
-                      onChange={e => setFormData({ ...formData, address: e.target.value })} rows={3} />
+                    <textarea placeholder="House no, Street, City, Pincode" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} rows={3} />
                   </div>
                 </div>
               </div>
@@ -351,23 +461,7 @@ const Checkout = () => {
                 <button className="co-next-btn" onClick={() => setStep(2)} disabled={!isDetailsValid}>Proceed to Payment →</button>
               </div>
             </div>
-            <div className="co-mini-summary glass">
-              <h3>Order Summary</h3>
-              <div className="co-mini-items">
-                {cartItems.map(item => (
-                  <div key={`${item.id}-${item.selectedWeight}`} className="co-mini-item">
-                    <img src={item.images[0]} alt={item.name} />
-                    <div><p>{item.name}</p><span>{item.selectedWeight} × {item.quantity}</span></div>
-                    <strong>₹{item.selectedPrice * item.quantity}</strong>
-                  </div>
-                ))}
-              </div>
-              <div className="co-mini-total">
-                {totalSavings > 0 && <div className="co-sum-row savings"><span>🎉 Savings</span><span>−₹{totalSavings}</span></div>}
-                <div className="co-sum-row"><span>Delivery</span><span className="co-free">FREE</span></div>
-                <div className="co-sum-total"><span>Total</span><span>₹{subtotal}</span></div>
-              </div>
-            </div>
+            <MiniSummary />
           </div>
         )}
 
@@ -392,28 +486,12 @@ const Checkout = () => {
               <div className="co-step-actions">
                 <button className="co-back-btn" onClick={() => setStep(1)}><MdArrowBack /> Back</button>
                 <button className="co-place-btn" onClick={handleRazorpay} disabled={placing}>
-                  {placing ? <><span className="co-spinner" /> Processing...</> : '💳 Pay ₹' + subtotal}
+                  {placing ? <><span className="co-spinner" /> Processing...</> : `💳 Pay ₹${finalTotal}`}
                 </button>
               </div>
               <p className="co-secure-note"><MdLock /> Secured & encrypted checkout</p>
             </div>
-            <div className="co-mini-summary glass">
-              <h3>Order Summary</h3>
-              <div className="co-mini-items">
-                {cartItems.map(item => (
-                  <div key={`${item.id}-${item.selectedWeight}`} className="co-mini-item">
-                    <img src={item.images[0]} alt={item.name} />
-                    <div><p>{item.name}</p><span>{item.selectedWeight} × {item.quantity}</span></div>
-                    <strong>₹{item.selectedPrice * item.quantity}</strong>
-                  </div>
-                ))}
-              </div>
-              <div className="co-mini-total">
-                {totalSavings > 0 && <div className="co-sum-row savings"><span>🎉 Savings</span><span>−₹{totalSavings}</span></div>}
-                <div className="co-sum-row"><span>Delivery</span><span className="co-free">FREE</span></div>
-                <div className="co-sum-total"><span>Total</span><span>₹{subtotal}</span></div>
-              </div>
-            </div>
+            <MiniSummary />
           </div>
         )}
 
