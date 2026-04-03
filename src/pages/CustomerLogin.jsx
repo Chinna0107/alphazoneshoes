@@ -44,19 +44,25 @@ const CustomerLogin = () => {
       <div className="cl-orb cl-orb-2" />
       <div className="cl-orb cl-orb-3" />
 
-      <div className="cl-card">
-        <div className="cl-left">
-          <img src={logo} alt="TheAlphaZone" className="cl-logo" />
-          <h1><span className="cl-alpha">TheAlpha</span><span className="cl-zone">Zone</span></h1>
-          <p>Sign in to track your orders and manage your profile.</p>
-          <div className="cl-features">
-            <div className="cl-feat"><span>📦</span> Track Orders</div>
-            <div className="cl-feat"><span>👤</span> Manage Profile</div>
-            <div className="cl-feat"><span>🛍️</span> Quick Shopping</div>
-            <div className="cl-feat"><span>🔔</span> Order Updates</div>
+      <div className="orb orb-1" />
+      <div className="orb orb-2" />
+      <div className="orb orb-3" />
+
+      <div className="login-card">
+        {/* Left panel */}
+        <div className="login-left">
+          <div className="login-left-content">
+            <img src={logo} alt="TheAlphaZone" className="login-logo" />
+            <h1><span className="l-alpha">TheAlpha</span><span className="l-zone">Zone</span></h1>
+            <p>Your premium fashion destination for sandals, shoes, slippers, tshirts & night pants.</p>
+            <div className="login-features">
+              <div className="lf-item"><span>👟</span> Premium Footwear</div>
+              <div className="lf-item"><span>👕</span> Trendy Apparel</div>
+              <div className="lf-item"><span>🚚</span> Fast Delivery</div>
+              <div className="lf-item"><span>✅</span> Quality Assured</div>
+            </div>
           </div>
         </div>
-
         <div className="cl-right">
           <div className="cl-form-wrap">
             <div className="cl-header">
