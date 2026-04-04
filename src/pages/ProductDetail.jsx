@@ -237,7 +237,7 @@ const ProductDetail = () => {
               <div className="pd-size-header">
                 <span className="pd-size-label">
                   Select Size
-                  {['Sandals', 'Shoes', 'Slippers'].includes(product.category) && <em> (UK)</em>}
+                  {['Sandals', 'Shoes', 'Flip Flops'].includes(product.category) && <em> (UK)</em>}
                 </span>
                 <span className="pd-size-guide" onClick={() => setShowSizeGuide(true)}><MdSwapHoriz /> Size Guide</span>
               </div>
@@ -331,7 +331,7 @@ const ProductDetail = () => {
               )}
               {tab === 'sizechart' && (
                 <div className="pd-size-chart">
-                  {['Sandals', 'Shoes', 'Slippers'].includes(product.category) ? (
+                  {['Sandals', 'Shoes', 'Flip Flops'].includes(product.category) ? (
                     <>
                       <p className="pd-size-chart-note">📌 Measure your foot length and match with the UK size below.</p>
                       <div className="pd-sc-table-wrap">
@@ -452,7 +452,7 @@ const ProductDetail = () => {
             <button className="sg-close" onClick={() => setShowSizeGuide(false)}>✕</button>
             <h2 className="sg-title">📏 Size Guide — {product.category}</h2>
 
-            {['Sandals', 'Shoes', 'Slippers'].includes(product.category) ? (
+            {['Sandals', 'Shoes', 'Flip Flops'].includes(product.category) ? (
               <>
                 <p className="sg-note">Measure your foot on a flat surface for the best fit. If between sizes, size up.</p>
                 <div className="sg-table-wrap">

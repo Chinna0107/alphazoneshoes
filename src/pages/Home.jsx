@@ -5,6 +5,7 @@ import axios from 'axios';
 import Slider from 'react-slick';
 import { MdStar, MdLocalShipping, MdVerified, MdPayment, MdPhone, MdShoppingCart, MdMessage } from 'react-icons/md';
 import { PiPantsFill } from 'react-icons/pi';
+import { TbFlipFlops } from 'react-icons/tb';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import useProducts from '../hooks/useProducts';
@@ -14,9 +15,9 @@ import './Home.css';
 const CATEGORIES = [
   { name: 'Sandals', icon: '👡', desc: 'Stylish sandals for every occasion' },
   { name: 'Shoes', icon: '👟', desc: 'Premium footwear for all lifestyles' },
-  { name: 'Slippers', icon: '🩴', desc: 'Comfortable home & casual slippers' },
+  { name: 'Flip Flops', icon: null, reactIcon: 'flipflops', desc: 'Comfortable home & casual flip flops' },
   { name: 'T-Shirts', icon: '👕', desc: 'Trendy tees for every mood' },
-  { name: 'Track Pants', icon: null, img: null, reactIcon: true, desc: 'Comfortable track & lounge wear' },
+  { name: 'Track Pants', icon: null, img: null, reactIcon: 'pants', desc: 'Comfortable track & lounge wear' },
 ];
 
 const SLIDES = [
@@ -117,7 +118,7 @@ const Home = () => {
               {CATEGORIES.map(cat => (
                 <div key={cat.name} className="mob-cat-card" onClick={() => navigate('/products', { state: { category: cat.name } })}>
                   {cat.reactIcon
-                    ? <PiPantsFill className="mob-cat-react-icon" />
+                    ? cat.reactIcon === 'flipflops' ? <TbFlipFlops className="mob-cat-react-icon" /> : <PiPantsFill className="mob-cat-react-icon" />
                     : <span className="mob-cat-icon">{cat.icon}</span>
                   }
                   <h3>{cat.name}</h3>
@@ -136,7 +137,7 @@ const Home = () => {
                   {cat.img
                     ? <img src={cat.img} alt={cat.name} className="cat-img" />
                     : cat.reactIcon
-                    ? <PiPantsFill className="cat-react-icon" />
+                    ? cat.reactIcon === 'flipflops' ? <TbFlipFlops className="cat-react-icon" /> : <PiPantsFill className="cat-react-icon" />
                     : <span className="cat-icon">{cat.icon}</span>
                   }
                   <h3>{cat.name}</h3>
@@ -258,7 +259,7 @@ const Home = () => {
                 <h3>👕 Summer Tees</h3>
                 <p>Fresh arrivals — breathable cotton tshirts</p>
               </div>
-              <div className="offer-card glass offer-3" style={{cursor:"pointer"}} onClick={() => navigate("/products", { state: { category: "Slippers" } })}>
+              <div className="offer-card glass offer-3" style={{cursor:"pointer"}} onClick={() => navigate("/products", { state: { category: "Flip Flops" } })}>
                 <div className="offer-badge">COMBO</div>
                 <h3>🩴 Slipper + Sandal</h3>
                 <p>Buy any 2 footwear & save big</p>

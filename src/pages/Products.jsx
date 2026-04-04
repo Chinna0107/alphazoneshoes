@@ -1,11 +1,12 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useCart } from '../context/CartContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MdFilterList, MdClose, MdSearch } from 'react-icons/md';
+import { TbFlipFlops } from 'react-icons/tb';
 import useProducts from '../hooks/useProducts';
 import './Products.css';
 
-const CATEGORY_ICONS = { All: '🛍️', Sandals: '👡', Shoes: '👟', Slippers: '🩴', 'T-Shirts': '👕', 'Track Pants': '🏃' };
+const CATEGORY_ICONS = { All: '🛍️', Sandals: '👡', Shoes: '👟', 'Flip Flops': null, 'T-Shirts': '👕', 'Track Pants': '🏃' };
 
 const TAG_LABELS = {
   bestseller: '🔥 Best Seller', popular: '⭐ Popular',
@@ -14,13 +15,20 @@ const TAG_LABELS = {
 };
 
 const STYLE_TAGS = [
-  { value: 'all',    label: '🛍️ All' },
   { value: 'sports', label: '🏃 Sports' },
   { value: 'ethnic', label: '🪡 Ethnic' },
   { value: 'casual', label: '👕 Casual' },
   { value: 'formal', label: '👔 Formal' },
   { value: 'party',  label: '🎉 Party' },
 ];
+
+const CATEGORY_STYLES = {
+  'T-Shirts':    ['Casual Wear','Streetwear','Graphic Tees','Oversized Fit','Minimal / Plain','Trendy / Fashion','Party Wear','Sports / Active','Summer Collection','Premium / Branded'],
+  'Track Pants': ['Casual Comfort','Gym / Fitness','Athleisure','Slim Fit','Joggers','Sports Performance','Travel Wear','Winter Wear','Relaxed Fit','Trendy Street Style'],
+  'Shoes':       ['Casual Shoes','Formal Shoes','Sports / Running','Sneakers','Party Wear','Office Wear','Luxury / Premium','Outdoor / Trekking','Training / Gym','Trendy Fashion'],
+  'Sandals':     ['Casual Sandals','Ethnic Wear','Party Wear','Office Wear','Comfort Wear','Summer Collection','Outdoor Use','Stylish / Trendy','Flat Sandals','Heeled Sandals'],
+  'Flip Flops':  ['Casual Everyday','Beach Wear','Home Comfort','Lightweight','Travel Essentials','Summer Special','Budget Friendly','Trendy Prints','Waterproof','Quick Wear'],
+};
 
 const SORT_OPTIONS = [
   { value: 'default',    label: 'Default' },
@@ -50,15 +58,17 @@ const Products = () => {
 
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedGender,   setSelectedGender]   = useState('All');
-  const [selectedStyle,    setSelectedStyle]     = useState('all');
-  const [searchTerm,       setSearchTerm]        = useState('');
-  const [searchOpen,       setSearchOpen]        = useState(false);
-  const [showFilter,       setShowFilter]        = useState(false);
-  const [sortBy,           setSortBy]            = useState('default');
-  const [selectedTags,     setSelectedTags]      = useState([]);
-  const [priceRange,       setPriceRange]        = useState([0, 10000]);
-  const [selectedWeights,  setSelectedWeights]   = useState({});
-  const [selectedColors,   setSelectedColors]    = useState({}); // productId → colorIndex
+  const [selectedStyles,   setSelectedStyles]   = useState([]);
+  const [searchTerm,       setSearchTerm]       = useState('');
+  const [searchOpen,       setSearchOpen]       = useState(false);
+  const [showFilter,       setShowFilter]       = useState(false);
+  const [sortBy,           setSortBy]           = useState('default');
+  const [selectedTags,     setSelectedTags]     = useState([]);
+  const [priceRange,       setPriceRange]       = useState([0, 10000]);
+  const [selectedWeights,  setSelectedWeights]  = useState({});
+  const [selectedColors,   setSelectedColors]   = useState({});
+
+  const filterRef = useRef(null);
 
   const categories = useMemo(() => ['All', ...new Set(products.map(p => p.category))], [products]);
 
@@ -76,8 +86,22 @@ const Products = () => {
     }
   }, [location.state]);
 
+  // Close filter on outside click
+  useEffect(() => {
+    if (!showFilter) return;
+    const handler = (e) => {
+      if (filterRef.current && !filterRef.current.contains(e.target)) setShowFilter(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showFilter]);
+
   const toggleTag = (tag) => setSelectedTags(prev =>
     prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+  );
+
+  const toggleStyle = (s) => setSelectedStyles(prev =>
+    prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]
   );
 
   const filteredProducts = useMemo(() =>
@@ -85,7 +109,7 @@ const Products = () => {
       .filter(p => {
         const matchCat    = selectedCategory === 'All' || p.category === selectedCategory;
         const matchGender = selectedGender === 'All' || p.gender === selectedGender;
-        const matchStyle  = selectedStyle === 'all' || (p.styleTags || (p.styleTag ? [p.styleTag] : [])).includes(selectedStyle);
+        const matchStyle  = selectedStyles.length === 0 || selectedStyles.some(s => (p.styleTags || []).includes(s));
         const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
         const matchTag    = selectedTags.length === 0 || selectedTags.includes(p.tag);
         const minP        = getMinPrice(p);
@@ -103,7 +127,7 @@ const Products = () => {
         }
         return 0;
       }),
-    [products, selectedCategory, selectedGender, selectedStyle, searchTerm, selectedTags, priceRange, sortBy]
+    [products, selectedCategory, selectedGender, selectedStyles, searchTerm, selectedTags, priceRange, sortBy]
   );
 
   const activeFiltersCount =
@@ -111,12 +135,12 @@ const Products = () => {
     (sortBy !== 'default' ? 1 : 0) +
     (priceRange[1] < maxPrice ? 1 : 0) +
     (selectedGender !== 'All' ? 1 : 0) +
-    (selectedStyle !== 'all' ? 1 : 0);
+    selectedStyles.length;
 
   const resetFilters = () => {
     setSelectedTags([]); setSortBy('default');
     setPriceRange([0, maxPrice]);
-    setSelectedGender('All'); setSelectedStyle('all');
+    setSelectedGender('All'); setSelectedStyles([]);
     setShowFilter(false);
   };
 
@@ -154,7 +178,7 @@ const Products = () => {
 
       {/* Filter Panel */}
       {showFilter && (
-        <div className="filter-panel glass">
+        <div className="filter-panel glass" ref={filterRef}>
           {/* Gender */}
           <div className="filter-section">
             <h4>Gender</h4>
@@ -170,14 +194,19 @@ const Products = () => {
           </div>
           {/* Style */}
           <div className="filter-section">
-            <h4>Style</h4>
+            <h4>Style <span style={{color:'rgba(255,255,255,0.4)',fontWeight:400,fontSize:'0.8rem'}}>(select multiple)</span></h4>
             <div className="filter-tags">
               {STYLE_TAGS.map(s => (
                 <button key={s.value}
-                  className={`filter-tag-btn ${selectedStyle === s.value ? 'active' : ''}`}
-                  onClick={() => setSelectedStyle(s.value)}>
+                  className={`filter-tag-btn ${selectedStyles.includes(s.value) ? 'active' : ''}`}
+                  onClick={() => toggleStyle(s.value)}>
                   {s.label}
                 </button>
+              ))}
+              {selectedCategory !== 'All' && CATEGORY_STYLES[selectedCategory]?.map(s => (
+                <button key={s}
+                  className={`filter-tag-btn ${selectedStyles.includes(s) ? 'active' : ''}`}
+                  onClick={() => toggleStyle(s)}>{s}</button>
               ))}
             </div>
           </div>
@@ -227,7 +256,7 @@ const Products = () => {
               <ul>
                 {categories.map(cat => (
                   <li key={cat} className={selectedCategory === cat ? 'active' : ''} onClick={() => setSelectedCategory(cat)}>
-                    <span>{CATEGORY_ICONS[cat] || '📦'}</span> {cat}
+                    <span>{cat === 'Flip Flops' ? <TbFlipFlops style={{color:'#e1782d',verticalAlign:'middle'}} /> : (CATEGORY_ICONS[cat] || '📦')}</span> {cat}
                   </li>
                 ))}
               </ul>
@@ -257,7 +286,6 @@ const Products = () => {
                 const origPrice     = product.originalPrices?.[currentWeight];
                 const disc          = calcDiscount(origPrice, currentPrice);
 
-                // stock
                 const getStock = (colorIdx, size) => {
                   const c = product.colors?.[colorIdx];
                   if (!c || !c.stock) return Infinity;
@@ -285,7 +313,6 @@ const Products = () => {
                       <h3>{product.name}</h3>
                       <p>{product.description || ''}</p>
 
-                      {/* Color Swatches */}
                       {colors && colors.length > 1 && (
                         <div className="product-color-swatches" onClick={e => e.stopPropagation()}>
                           {colors.map((c, ci) => (

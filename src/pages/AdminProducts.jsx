@@ -7,8 +7,8 @@ import config from '../config';
 import AdminHeader from '../components/AdminHeader';
 import './AdminProducts.css';
 
-const CATEGORIES  = ['Sandals', 'Shoes', 'Slippers', 'T-Shirts', 'Track Pants'];
-const FOOTWEAR_CATS = ['Sandals', 'Shoes', 'Slippers'];
+const CATEGORIES  = ['Sandals', 'Shoes', 'Flip Flops', 'T-Shirts', 'Track Pants'];
+const FOOTWEAR_CATS = ['Sandals', 'Shoes', 'Flip Flops'];
 const APPAREL_CATS  = ['T-Shirts', 'Track Pants'];
 const FOOTWEAR_SIZES = ['UK 4','UK 5','UK 6','UK 7','UK 8','UK 9','UK 10','UK 11','UK 12'];
 const APPAREL_SIZES  = ['S','M','L','XL','XXL','XXXL'];
@@ -22,14 +22,13 @@ const TAGS = [
   { value: 'limited',       label: '⏳ Limited Edition' },
 ];
 
-const STYLE_TAGS = [
-  { value: 'all',           label: '🛍️ All' },
-  { value: 'sports',        label: '🏃 Sports' },
-  { value: 'ethnic',        label: '🪡 Ethnic Wear' },
-  { value: 'casual',        label: '👕 Casual' },
-  { value: 'formal',        label: '👔 Formal' },
-  { value: 'party',         label: '🎉 Party Wear' },
-];
+const CATEGORY_STYLES = {
+  'T-Shirts':    ['Casual Wear','Streetwear','Graphic Tees','Oversized Fit','Minimal / Plain','Trendy / Fashion','Party Wear','Sports / Active','Summer Collection','Premium / Branded'],
+  'Track Pants': ['Casual Comfort','Gym / Fitness','Athleisure','Slim Fit','Joggers','Sports Performance','Travel Wear','Winter Wear','Relaxed Fit','Trendy Street Style'],
+  'Shoes':       ['Casual Shoes','Formal Shoes','Sports / Running','Sneakers','Party Wear','Office Wear','Luxury / Premium','Outdoor / Trekking','Training / Gym','Trendy Fashion'],
+  'Sandals':     ['Casual Sandals','Ethnic Wear','Party Wear','Office Wear','Comfort Wear','Summer Collection','Outdoor Use','Stylish / Trendy','Flat Sandals','Heeled Sandals'],
+  'Flip Flops':  ['Casual Everyday','Beach Wear','Home Comfort','Lightweight','Travel Essentials','Summer Special','Budget Friendly','Trendy Prints','Waterproof','Quick Wear'],
+};
 
 const EMPTY_COLOR = { name: '', hex: '#ffffff', images: ['', '', ''], stock: {} };
 
@@ -131,7 +130,7 @@ const AdminProducts = () => {
     setEditingProduct(product);
     setFormData({
       name: product.name, category: product.category,
-      gender: product.gender || '', styleTags: product.styleTags || (product.styleTag ? [product.styleTag] : []),
+      gender: product.gender || '', styleTags: product.styleTags || [],
       grams: product.grams || [], prices: product.prices || {},
       originalPrices: product.originalPrices || {},
       description: product.description, tag: product.tag || '', stock: product.stock ?? '',
@@ -239,7 +238,7 @@ const AdminProducts = () => {
               {/* Category */}
               <div className="form-field">
                 <label>Category *</label>
-                <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value, grams: [], prices: {} })} required>
+                <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value, styleTags: [], grams: [], prices: {} })} required>
                   <option value="">Select category</option>
                   {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -259,22 +258,27 @@ const AdminProducts = () => {
               </div>
 
               {/* Style Tags - multi select */}
-              <div className="form-field">
+              <div className="form-field full-width">
                 <label>Style <span style={{color:'rgba(255,255,255,0.4)',fontWeight:400,textTransform:'none',letterSpacing:0}}>(select multiple)</span></label>
-                <div className="style-tag-options">
-                  {STYLE_TAGS.filter(s => s.value !== 'all').map(s => (
-                    <button type="button" key={s.value}
-                      className={`style-tag-btn ${formData.styleTags.includes(s.value) ? 'active' : ''}`}
-                      onClick={() => setFormData(prev => ({
-                        ...prev,
-                        styleTags: prev.styleTags.includes(s.value)
-                          ? prev.styleTags.filter(t => t !== s.value)
-                          : [...prev.styleTags, s.value]
-                      }))}>
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
+                {!formData.category || !CATEGORY_STYLES[formData.category]
+                  ? <div className="size-hint">Select a category first</div>
+                  : (
+                    <div className="style-tag-options">
+                      {CATEGORY_STYLES[formData.category].map(s => (
+                        <button type="button" key={s}
+                          className={`style-tag-btn ${formData.styleTags.includes(s) ? 'active' : ''}`}
+                          onClick={() => setFormData(prev => ({
+                            ...prev,
+                            styleTags: prev.styleTags.includes(s)
+                              ? prev.styleTags.filter(t => t !== s)
+                              : [...prev.styleTags, s]
+                          }))}>
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )
+                }
               </div>
 
               {/* Sizes */}
@@ -430,7 +434,7 @@ const AdminProducts = () => {
                   <td className="product-name-cell">{product.name}</td>
                   <td><span className="category-badge">{product.category}</span></td>
                   <td><span className={`gender-badge gender-${(product.gender || '').toLowerCase()}`}>{product.gender === 'Men' ? '👨' : product.gender === 'Women' ? '👩' : product.gender === 'Children' ? '👦' : '—'} {product.gender || '—'}</span></td>
-                  <td>{product.styleTags?.length ? product.styleTags.map(s => <span key={s} className="style-badge" style={{marginRight:'0.25rem'}}>{STYLE_TAGS.find(st => st.value === s)?.label || s}</span>) : <span style={{ color: 'rgba(255,255,255,0.3)' }}>—</span>}</td>
+                  <td>{product.styleTags?.length ? product.styleTags.map(s => <span key={s} className="style-badge" style={{marginRight:'0.25rem'}}>{s}</span>) : <span style={{ color: 'rgba(255,255,255,0.3)' }}>—</span>}</td>
                   <td>
                     <div className="color-swatches-admin">
                       {(product.colors || []).map((c, i) => (

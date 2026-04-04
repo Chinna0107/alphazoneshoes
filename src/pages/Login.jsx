@@ -49,7 +49,7 @@ const Login = () => {
           <div className="login-left-content">
             <img src={logo} alt="TheAlphaZone" className="login-logo" />
             <h1><span className="l-alpha">TheAlpha</span><span className="l-zone">Zone</span></h1>
-            <p>Your premium fashion destination for sandals, shoes, slippers, tshirts & night pants.</p>
+            <p>Your premium fashion destination for sandals, shoes, flip flops, tshirts & night pants.</p>
             <div className="login-features">
               <div className="lf-item"><span>👟</span> Premium Footwear</div>
               <div className="lf-item"><span>👕</span> Trendy Apparel</div>

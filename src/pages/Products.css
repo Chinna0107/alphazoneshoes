@@ -696,3 +696,26 @@
   border: 1px solid rgba(240,165,75,0.3);
   color: #f0a54b;
 }
+
+/* ── Mobile: smaller tags & badges ── */
+@media (max-width: 768px) {
+  .product-badge {
+    font-size: 0.6rem;
+    padding: 0.18rem 0.5rem;
+  }
+  .product-disc-badge {
+    font-size: 0.6rem;
+    padding: 0.18rem 0.45rem;
+  }
+  .discount-badge {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.35rem;
+  }
+  .filter-tag-btn { font-size: 0.72rem; padding: 0.25rem 0.55rem; }
+}
+
+@media (max-width: 480px) {
+  .product-badge { font-size: 0.55rem; padding: 0.15rem 0.4rem; }
+  .product-disc-badge { font-size: 0.55rem; padding: 0.15rem 0.38rem; }
+  .discount-badge { font-size: 0.55rem; padding: 0.08rem 0.3rem; }
+}
