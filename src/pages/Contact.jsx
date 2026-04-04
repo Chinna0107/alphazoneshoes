@@ -8,7 +8,7 @@ const Contact = () => {
     const name = e.target.name.value;
     const email = e.target.email.value;
     const message = e.target.message.value;
-    window.open(`https://wa.me/9198885553240?text=Name: ${name}%0AEmail: ${email}%0AMessage: ${message}`, '_blank');
+    window.open(`https://wa.me/9198885553249?text=Name: ${name}%0AEmail: ${email}%0AMessage: ${message}`, '_blank');
     toast.success('Redirecting to WhatsApp...');
     e.target.reset();
   };
@@ -25,16 +25,16 @@ const Contact = () => {
             <h2>Get in Touch</h2>
             <div className="info-item">
               <h3>📞 Phone</h3>
-              <p>+91 8885553240</p>
+              <p>+91 8885553249</p>
               {/* <p>+91 7901288956</p> */}
             </div>
             <div className="info-item">
               <h3>📧 Email</h3>
-              <p>thealphazone@gmail.com</p>
+              <p>thealphazone007@gmail.com</p>
             </div>
             <div className="info-item">
               <h3>📍 Address</h3>
-              <p>TheAlphaZone Fashion Store<br />Kadapa<br />Kadapa - 518301</p>
+              <p>TheAlphaZone Fashion Store<br />Kadapa<br />Kadapa - 516001</p>
             </div>
             <div className="info-item">
               <h3>🕐 Business Hours</h3>

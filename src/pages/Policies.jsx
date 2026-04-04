@@ -28,7 +28,7 @@ const POLICIES = {
       },
       {
         heading: 'Contact Us',
-        content: 'If you have any questions about this Privacy Policy, please contact us at thealphazone@gmail.com or call +91 9100009907.',
+        content: 'If you have any questions about this Privacy Policy, please contact us at thealphazone007@gmail.com or call +91 8885553249.',
       },
     ],
   },
@@ -38,7 +38,7 @@ const POLICIES = {
     sections: [
       {
         heading: 'Delivery Areas',
-        content: 'We currently deliver across Sangareddy and surrounding areas. For deliveries outside our standard zone, please contact us directly via WhatsApp or phone to confirm availability.',
+        content: 'We are delivering our products across all over India . For deliveries outside our standard zone, please contact us directly via WhatsApp or phone to confirm availability.',
       },
       {
         heading: 'Delivery Time',
@@ -54,7 +54,7 @@ const POLICIES = {
       },
       {
         heading: 'Tracking Your Order',
-        content: 'Currently, we do not offer real-time order tracking. However, you can always reach us on WhatsApp at +91 9100009907 for a status update on your order.',
+        content: 'Currently, we do not offer real-time order tracking. However, you can always reach us on WhatsApp at +91 8885553249 for a status update on your order.',
       },
       {
         heading: 'Failed Delivery',
@@ -66,9 +66,12 @@ const POLICIES = {
     title: '↩️ Refund & Return Policy',
     lastUpdated: 'January 2026',
     sections: [
+       
+      
+
       {
         heading: 'Return Eligibility',
-        content: 'We accept returns within 7 days of delivery for items that are defective, damaged, or incorrect. Items must be unused, unwashed, and in their original packaging with all tags intact.',
+        content: 'We accept returns within 7 days of delivery for items that are defective, damaged, or incorrect. Items must be unused, unwashed, and in their original packaging with all tags intact. Disclaimers: We do not accept returns for change of mind, fit issues, or if the item has been used, washed, or altered. And our live video are required for all returns. Please contact us on WhatsApp at +91 8885553249 to schedule a live video inspection of the item before initiating a return.',
       },
       {
         heading: 'Non-Returnable Items',
@@ -76,7 +79,7 @@ const POLICIES = {
       },
       {
         heading: 'Exchange Policy',
-        content: 'We offer size exchanges within 7 days of delivery, subject to stock availability. To initiate an exchange, contact us via WhatsApp at +91 9100009907 with your order details and reason.',
+        content: 'We offer size exchanges within 7 days of delivery, subject to stock availability. To initiate an exchange, contact us via WhatsApp at +91 8885553249 with your order details and reason.',
       },
       {
         heading: 'Refund Process',
@@ -88,13 +91,13 @@ const POLICIES = {
       },
       {
         heading: 'How to Initiate a Return',
-        content: 'Contact us on WhatsApp at +91 9100009907 or email thealphazone@gmail.com with your order number, item details, and reason for return. Our team will guide you through the process.',
+        content: 'Contact us on WhatsApp at +91 8885553249 or email thealphazone007@gmail.com with your order number, item details, and reason for return. Our team will guide you through the process.',
       },
     ],
   },
   '/terms': {
     title: '📋 Terms & Conditions',
-    lastUpdated: 'January 2026',
+    lastUpdated: 'April 2026',
     sections: [
       {
         heading: 'Acceptance of Terms',
