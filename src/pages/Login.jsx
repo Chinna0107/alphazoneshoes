@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import logo from '../assets/logo2.jpeg';
+import logo from '../assets/logo3.png';
 import config from '../config';
 import './Login.css';
 

@@ -4,7 +4,7 @@
   display: flex; align-items: center; justify-content: center;
   background: linear-gradient(135deg, #1a0a0a 0%, #2e1010 50%, #1f0f08 100%);
   background-attachment: fixed;
-  padding: 1.5rem;
+  padding: 5rem 1.5rem 1.5rem;
   position: relative; overflow: hidden;
 }
 
@@ -341,7 +341,7 @@
 }
 
 @media (max-width: 480px) {
-  .cl-page { padding: 1rem; }
+  .cl-page { padding: 5rem 1rem 1rem; }
   .cl-card { border-radius: 20px; }
   .cl-left { padding: 2rem 1.5rem; }
   .cl-right { padding: 2rem 1.5rem; }

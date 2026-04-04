@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUserAuth } from '../context/UserAuthContext';
 import axios from 'axios';
 import config from '../config';
-import logo from '../assets/logo2.jpeg';
+import logo from '../assets/logo3.png';
 import './CustomerLogin.css';
 
 const CustomerLogin = () => {
