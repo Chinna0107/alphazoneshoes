@@ -39,6 +39,7 @@ const ProductDetail = () => {
   const [wishlisted, setWishlisted] = useState(false);
   const [copied, setCopied] = useState(false);
   const [tab, setTab] = useState('desc');
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
   const imgRef = useRef(null);
 
   const { addToCart, updateQuantity, isInCart, getCartQuantity } = useCart();
@@ -106,6 +107,7 @@ const ProductDetail = () => {
     .slice(0, 4);
 
   return (
+    <>
     <div className="pd-page">
       <div className="pd-container">
 
@@ -237,7 +239,7 @@ const ProductDetail = () => {
                   Select Size
                   {['Sandals', 'Shoes', 'Slippers'].includes(product.category) && <em> (UK)</em>}
                 </span>
-                <span className="pd-size-guide"><MdSwapHoriz /> Size Guide</span>
+                <span className="pd-size-guide" onClick={() => setShowSizeGuide(true)}><MdSwapHoriz /> Size Guide</span>
               </div>
               <div className="pd-sizes">
                 {sizes.map(size => {
@@ -310,6 +312,7 @@ const ProductDetail = () => {
             <div className="pd-tabs">
               <button className={`pd-tab ${tab === 'desc' ? 'active' : ''}`} onClick={() => setTab('desc')}>Description</button>
               <button className={`pd-tab ${tab === 'details' ? 'active' : ''}`} onClick={() => setTab('details')}>Details</button>
+              <button className={`pd-tab ${tab === 'sizechart' ? 'active' : ''}`} onClick={() => setTab('sizechart')}>📏 Size Chart</button>
             </div>
             <div className="pd-tab-content">
               {tab === 'desc' && (
@@ -324,6 +327,84 @@ const ProductDetail = () => {
                   <div className="pd-detail-row"><span>Available Sizes</span><span>{sizes.join(', ')}</span></div>
                   <div className="pd-detail-row"><span>Tag</span><span>{TAG_LABELS[product.tag] || '—'}</span></div>
                   <div className="pd-detail-row"><span>SKU</span><span>AZ-{String(product.id).padStart(4, '0')}</span></div>
+                </div>
+              )}
+              {tab === 'sizechart' && (
+                <div className="pd-size-chart">
+                  {['Sandals', 'Shoes', 'Slippers'].includes(product.category) ? (
+                    <>
+                      <p className="pd-size-chart-note">📌 Measure your foot length and match with the UK size below.</p>
+                      <div className="pd-sc-table-wrap">
+                        <table className="pd-sc-table">
+                          <thead>
+                            <tr>
+                              <th>UK Size</th><th>EU Size</th><th>US Size</th><th>Foot Length (cm)</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {[
+                              ['UK 4', 'EU 37', 'US 5',   '22.5 cm'],
+                              ['UK 5', 'EU 38', 'US 6',   '23.5 cm'],
+                              ['UK 6', 'EU 39', 'US 7',   '24.5 cm'],
+                              ['UK 7', 'EU 40', 'US 8',   '25.5 cm'],
+                              ['UK 8', 'EU 41', 'US 9',   '26.5 cm'],
+                              ['UK 9', 'EU 42', 'US 10',  '27.5 cm'],
+                              ['UK 10','EU 43', 'US 11',  '28.5 cm'],
+                              ['UK 11','EU 44', 'US 12',  '29.5 cm'],
+                            ].map(([uk, eu, us, cm]) => (
+                              <tr key={uk} className={selectedSize === uk ? 'sc-active' : ''}>
+                                <td><strong>{uk}</strong></td><td>{eu}</td><td>{us}</td><td>{cm}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="pd-sc-tips">
+                        <h4>How to measure</h4>
+                        <ul>
+                          <li>Stand on a flat surface and trace your foot on paper.</li>
+                          <li>Measure the longest distance from heel to toe.</li>
+                          <li>If between sizes, go one size up.</li>
+                        </ul>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="pd-size-chart-note">📌 Refer to chest/waist measurements to find your perfect fit.</p>
+                      <div className="pd-sc-table-wrap">
+                        <table className="pd-sc-table">
+                          <thead>
+                            <tr>
+                              <th>Size</th><th>Chest (in)</th><th>Waist (in)</th><th>Hip (in)</th><th>Height (cm)</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {[
+                              ['S',    '34–36', '28–30', '36–38', '155–160'],
+                              ['M',    '38–40', '32–34', '40–42', '160–165'],
+                              ['L',    '42–44', '36–38', '44–46', '165–170'],
+                              ['XL',   '46–48', '40–42', '48–50', '170–175'],
+                              ['XXL',  '50–52', '44–46', '52–54', '175–180'],
+                              ['XXXL', '54–56', '48–50', '56–58', '180–185'],
+                            ].map(([size, chest, waist, hip, height]) => (
+                              <tr key={size} className={selectedSize === size ? 'sc-active' : ''}>
+                                <td><strong>{size}</strong></td><td>{chest}</td><td>{waist}</td><td>{hip}</td><td>{height}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="pd-sc-tips">
+                        <h4>How to measure</h4>
+                        <ul>
+                          <li><strong>Chest:</strong> Measure around the fullest part of your chest.</li>
+                          <li><strong>Waist:</strong> Measure around your natural waistline.</li>
+                          <li><strong>Hip:</strong> Measure around the fullest part of your hips.</li>
+                          <li>If between sizes, go one size up for a relaxed fit.</li>
+                        </ul>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -362,6 +443,95 @@ const ProductDetail = () => {
 
       </div>
     </div>
+
+      {/* ── Size Guide Modal ── */}
+      {showSizeGuide && (
+        <div className="sg-overlay" onClick={() => setShowSizeGuide(false)}>
+          <div className="sg-modal" onClick={e => e.stopPropagation()}>
+            <button className="sg-close" onClick={() => setShowSizeGuide(false)}>✕</button>
+            <h2 className="sg-title">📏 Size Guide — {product.category}</h2>
+
+            {['Sandals', 'Shoes', 'Slippers'].includes(product.category) ? (
+              <>
+                <p className="sg-note">Measure your foot on a flat surface for the best fit. If between sizes, size up.</p>
+                <div className="sg-table-wrap">
+                  <table className="sg-table">
+                    <thead>
+                      <tr><th>UK</th><th>EU</th><th>US (M)</th><th>US (W)</th><th>Foot Length</th><th>Foot Width</th></tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        ['UK 4',  'EU 37', 'US 5',  'US 6',  '22.5 cm', '8.5 cm'],
+                        ['UK 5',  'EU 38', 'US 6',  'US 7',  '23.5 cm', '8.8 cm'],
+                        ['UK 6',  'EU 39', 'US 7',  'US 8',  '24.5 cm', '9.0 cm'],
+                        ['UK 7',  'EU 40', 'US 8',  'US 9',  '25.5 cm', '9.3 cm'],
+                        ['UK 8',  'EU 41', 'US 9',  'US 10', '26.5 cm', '9.6 cm'],
+                        ['UK 9',  'EU 42', 'US 10', 'US 11', '27.5 cm', '9.8 cm'],
+                        ['UK 10', 'EU 43', 'US 11', 'US 12', '28.5 cm', '10.1 cm'],
+                        ['UK 11', 'EU 44', 'US 12', 'US 13', '29.5 cm', '10.3 cm'],
+                      ].map(([uk, eu, usm, usw, len, wid]) => (
+                        <tr key={uk} className={selectedSize === uk ? 'sg-active' : ''}>
+                          <td><strong>{uk}</strong></td><td>{eu}</td><td>{usm}</td><td>{usw}</td><td>{len}</td><td>{wid}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="sg-how">
+                  <h4>How to Measure Your Foot</h4>
+                  <div className="sg-steps">
+                    <div className="sg-step"><span>1</span><p>Place a sheet of paper on the floor and stand on it.</p></div>
+                    <div className="sg-step"><span>2</span><p>Trace the outline of your foot with a pencil.</p></div>
+                    <div className="sg-step"><span>3</span><p>Measure the <strong>length</strong> from heel to longest toe.</p></div>
+                    <div className="sg-step"><span>4</span><p>Measure the <strong>width</strong> at the widest part of the foot.</p></div>
+                    <div className="sg-step"><span>5</span><p>Match measurements to the table above. Size up if between sizes.</p></div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="sg-note">All measurements are in inches. For a relaxed fit, size up.</p>
+                <div className="sg-table-wrap">
+                  <table className="sg-table">
+                    <thead>
+                      <tr><th>Size</th><th>Chest</th><th>Shoulder</th><th>Length</th><th>Sleeve</th><th>Waist</th><th>Hip</th></tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        ['S',    '34–36"', '16"',   '27"', '24"', '28–30"', '36–38"'],
+                        ['M',    '38–40"', '17"',   '28"', '25"', '32–34"', '40–42"'],
+                        ['L',    '42–44"', '18"',   '29"', '26"', '36–38"', '44–46"'],
+                        ['XL',   '46–48"', '19"',   '30"', '27"', '40–42"', '48–50"'],
+                        ['XXL',  '50–52"', '20"',   '31"', '28"', '44–46"', '52–54"'],
+                        ['XXXL', '54–56"', '21"',   '32"', '29"', '48–50"', '56–58"'],
+                      ].map(([size, chest, shoulder, length, sleeve, waist, hip]) => (
+                        <tr key={size} className={selectedSize === size ? 'sg-active' : ''}>
+                          <td><strong>{size}</strong></td><td>{chest}</td><td>{shoulder}</td><td>{length}</td><td>{sleeve}</td><td>{waist}</td><td>{hip}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="sg-how">
+                  <h4>How to Measure</h4>
+                  <div className="sg-steps">
+                    <div className="sg-step"><span>1</span><p><strong>Chest:</strong> Measure around the fullest part of your chest, keeping tape horizontal.</p></div>
+                    <div className="sg-step"><span>2</span><p><strong>Shoulder:</strong> Measure from one shoulder seam to the other across the back.</p></div>
+                    <div className="sg-step"><span>3</span><p><strong>Length:</strong> Measure from the highest point of the shoulder down to the hem.</p></div>
+                    <div className="sg-step"><span>4</span><p><strong>Sleeve:</strong> Measure from shoulder seam to wrist with arm slightly bent.</p></div>
+                    <div className="sg-step"><span>5</span><p><strong>Waist:</strong> Measure around your natural waistline, keeping tape comfortably loose.</p></div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className="sg-tip-box">
+              💡 <strong>Pro Tip:</strong> If you're between sizes, we recommend sizing up for a more comfortable fit.
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
