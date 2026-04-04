@@ -351,6 +351,7 @@ const ProductDetail = () => {
                               ['UK 9', 'EU 42', 'US 10',  '27.5 cm'],
                               ['UK 10','EU 43', 'US 11',  '28.5 cm'],
                               ['UK 11','EU 44', 'US 12',  '29.5 cm'],
+                              ['UK 12','EU 45', 'US 13',  '30.5 cm'],
                             ].map(([uk, eu, us, cm]) => (
                               <tr key={uk} className={selectedSize === uk ? 'sc-active' : ''}>
                                 <td><strong>{uk}</strong></td><td>{eu}</td><td>{us}</td><td>{cm}</td>
@@ -469,6 +470,7 @@ const ProductDetail = () => {
                         ['UK 9',  'EU 42', 'US 10', 'US 11', '27.5 cm', '9.8 cm'],
                         ['UK 10', 'EU 43', 'US 11', 'US 12', '28.5 cm', '10.1 cm'],
                         ['UK 11', 'EU 44', 'US 12', 'US 13', '29.5 cm', '10.3 cm'],
+                        ['UK 12', 'EU 45', 'US 13', 'US 14', '30.5 cm', '10.6 cm'],
                       ].map(([uk, eu, usm, usw, len, wid]) => (
                         <tr key={uk} className={selectedSize === uk ? 'sg-active' : ''}>
                           <td><strong>{uk}</strong></td><td>{eu}</td><td>{usm}</td><td>{usw}</td><td>{len}</td><td>{wid}</td>
