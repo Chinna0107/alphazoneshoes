@@ -22,23 +22,27 @@ const CATEGORIES = [
 const SLIDES = [
   {
     id: 1, title: 'TheAlphaZone',
-    desktop: 'https://res.cloudinary.com/dgyykbmt6/image/upload/q_auto/f_auto/v1775230558/ChatGPT_Image_Apr_3_2026_09_05_42_PM_ho0jqa.png',
+    tag: 'New Collection', heading: 'Welcome to TheAlphaZone', desc: 'Fashion that defines you — sandals, shoes, tshirts & more',
+    desktop: 'https://res.cloudinary.com/dgyykbmt6/image/upload/q_auto/f_auto/v1775295183/1_ik1a3r.png',
     mobile:  'https://res.cloudinary.com/dgyykbmt6/image/upload/w_1080,h_1080,c_pad,b_auto,q_auto,f_auto/v1775231862/Alpha_Zone_Promotion_Poster_aaqsgf.png',
   },
   {
     id: 2, title: 'Women Wear',
-    desktop: 'https://res.cloudinary.com/dgyykbmt6/image/upload/q_auto/f_auto/v1775231471/Women_Styles_fyth8i.png',
+    tag: 'Women\'s Fashion', heading: 'Style Meets Elegance', desc: 'Explore our exclusive women\'s collection — kurtas, tops, dresses & more',
+    desktop: 'https://res.cloudinary.com/dgyykbmt6/image/upload/q_auto/f_auto/v1775295189/3_kf6rli.png',
     mobile:  'https://res.cloudinary.com/dgyykbmt6/image/upload/w_1080,h_1180,c_pad,b_auto,q_auto,f_auto/v1775231866/Women_Styles_iz0gtu.png',
   },
   {
     id: 3, title: 'Men Wear',
-    desktop: 'https://res.cloudinary.com/dgyykbmt6/image/upload/q_auto/f_auto/v1775231467/Men_Styles_soz6os.png',
-    mobile:  'https://res.cloudinary.com/dgyykbmt6/image/upload/w_1080,h_1180,c_pad,b_auto,q_auto,f_auto/v1775231861/Men_Styles_evnc6k.png',
+    tag: 'Men\'s Collection', heading: 'Dress Bold, Live Bold', desc: 'Premium men\'s wear — shirts, track pants, tshirts & more',
+    desktop: 'https://res.cloudinary.com/dgyykbmt6/image/upload/q_auto/f_auto/v1775295185/2_a2zgz3.png',
+    mobile:  'https://res.cloudinary.com/dgyykbmt6/image/upload/q_auto/f_auto/v1775294710/2_tahsrz.png',
   },
   {
     id: 4, title: 'Kids Wear',
-    desktop: 'https://res.cloudinary.com/dgyykbmt6/image/upload/q_auto/f_auto/v1775230879/Kids_Styles_1_1_dpgyj7.png',
-    mobile:  'https://res.cloudinary.com/dgyykbmt6/image/upload/w_1080,h_1180,c_pad,b_auto,q_auto,f_auto/v1775231860/Kids_Styles_1_dn35yb.png',
+    tag: 'Kids\' Fashion', heading: 'Fun Styles for Little Ones', desc: 'Bright, comfy & trendy kids wear for every occasion',
+    desktop: 'https://res.cloudinary.com/dgyykbmt6/image/upload/q_auto/f_auto/v1775295185/4_ylmzjd.png',
+    mobile:  'https://res.cloudinary.com/dgyykbmt6/image/upload/q_auto/f_auto/v1775295120/oie_Z5GKo8MMaKT6_nbropo.png',
   },
 ];
 
@@ -85,12 +89,15 @@ const Home = () => {
               {sliders.map(s => (
                 <div key={s.id} className="slide">
                   <div className="slide-box">
-                    <img src={s.desktop || s.imageUrl} alt={s.title} />
+                    <picture>
+                      <source media="(max-width: 480px)" srcSet={s.mobile || s.desktop || s.imageUrl} />
+                      <img src={s.desktop || s.imageUrl} alt={s.title} />
+                    </picture>
                     <div className="slide-overlay">
                       <div className="slide-text glass">
-                        <span className="slide-tag">New Collection</span>
-                        <h1>Welcome to <span className="brand-alpha">TheAlpha</span><span className="brand-zone">Zone</span></h1>
-                        <p>Fashion that defines you — sandals, shoes, tshirts & more</p>
+                        <span className="slide-tag">{s.tag || 'New Collection'}</span>
+                        <h1>{s.heading || 'Welcome to TheAlphaZone'}</h1>
+                        <p>{s.desc || 'Fashion that defines you — sandals, shoes, tshirts & more'}</p>
                         <div className="slide-btns">
                           <button className="hero-btn" onClick={() => navigate('/products')}>Shop Now →</button>
                           <button className="hero-btn-outline" onClick={() => navigate('/about')}>Our Story</button>
