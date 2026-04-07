@@ -24,8 +24,8 @@ const SLIDES = [
   {
     id: 1, title: 'TheAlphaZone',
     tag: 'New Collection', heading: 'Welcome to TheAlphaZone', desc: 'Fashion that defines you — sandals, shoes, tshirts & more',
-    desktop: 'https://res.cloudinary.com/dgyykbmt6/image/upload/q_auto/f_auto/v1775295183/1_ik1a3r.png',
-    mobile:  'https://res.cloudinary.com/dgyykbmt6/image/upload/w_1080,h_1080,c_pad,b_auto,q_auto,f_auto/v1775231862/Alpha_Zone_Promotion_Poster_aaqsgf.png',
+    desktop: 'https://res.cloudinary.com/dgyykbmt6/image/upload/q_auto/f_auto/v1775577214/The_Alpha_Zone_banner_design_mmhrur.png',
+    mobile:  'https://res.cloudinary.com/dgyykbmt6/image/upload/q_auto/f_auto/v1775577674/Gemini_Generated_Image_ibjvytibjvytibjv_ogr02z.png',
   },
   {
     id: 2, title: 'Women Wear',
