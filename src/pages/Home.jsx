@@ -149,25 +149,7 @@ const Home = () => {
           </section>
 
           {/* How It Works */}
-          <section className="workflow-section">
-            <h2 className="section-title">How It Works</h2>
-            <div className="workflow-steps">
-              {[
-                { num: '1', icon: <MdShoppingCart />, title: 'Browse', desc: 'Explore our fashion collections' },
-                { num: '2', icon: <MdMessage />, title: 'Order', desc: 'Send your order via WhatsApp' },
-                { num: '3', icon: <MdPhone />, title: 'Confirm', desc: 'We call to confirm your order' },
-                { num: '4', icon: <MdPayment />, title: 'Pay', desc: 'Secure & easy payment' },
-                { num: '5', icon: <MdLocalShipping />, title: 'Delivered', desc: 'Fast delivery to your door' },
-              ].map((step, i) => (
-                <div key={i} className="step-card glass">
-                  <span className="step-num">{step.num}</span>
-                  <span className="step-icon">{step.icon}</span>
-                  <h3>{step.title}</h3>
-                  <p>{step.desc}</p>
-                </div>
-              ))}
-            </div>
-          </section>
+         
 
           {/* Why Choose Us */}
           <section className="features-section">
