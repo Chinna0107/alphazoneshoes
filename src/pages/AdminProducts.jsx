@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
@@ -44,6 +44,7 @@ const AdminProducts = () => {
   const [products, setProducts]       = useState([]);
   const [showForm, setShowForm]       = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [inlineEditId, setInlineEditId]     = useState(null);
   const [loading, setLoading]         = useState(false);
   const [formData, setFormData]       = useState(INIT_FORM);
   const [showWeightDropdown, setShowWeightDropdown] = useState(false);
@@ -51,6 +52,7 @@ const AdminProducts = () => {
   const [addStockQty, setAddStockQty] = useState('');
   const [stockModalColor, setStockModalColor] = useState(0);
   const [stockModalSize, setStockModalSize]   = useState('');
+  const inlineFormRef = useRef(null);
   const navigate = useNavigate();
 
   const weightOptions = FOOTWEAR_CATS.includes(formData.category)
@@ -129,6 +131,7 @@ const AdminProducts = () => {
 
   const handleEdit = (product) => {
     setEditingProduct(product);
+    setInlineEditId(product.id);
     setFormData({
       name: product.name, category: product.category,
       gender: product.gender || '', styleTags: product.styleTags || [],
@@ -139,10 +142,11 @@ const AdminProducts = () => {
         ? product.colors.map(c => ({ name: c.name || '', hex: c.hex || '#ffffff', images: c.images || ['','',''], stock: c.stock || {} }))
         : [{ name: '', hex: '#ffffff', images: product.images || ['','',''], stock: {} }],
     });
-    setShowForm(true);
+    setShowForm(false);
+    setTimeout(() => inlineFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
   };
 
-  const resetForm = () => { setFormData(INIT_FORM); setEditingProduct(null); setShowForm(false); };
+  const resetForm = () => { setFormData(INIT_FORM); setEditingProduct(null); setInlineEditId(null); setShowForm(false); };
 
   const handleAddStock = async () => {
     if (!addStockQty || Number(addStockQty) <= 0 || !stockModalSize) return;
@@ -430,66 +434,228 @@ const AdminProducts = () => {
               {products.length === 0 ? (
                 <tr><td colSpan="11"><div className="empty-state"><span>📦</span><p>No products yet.</p></div></td></tr>
               ) : products.map(product => (
-                <tr key={product.id}>
-                  <td><img src={product.images?.[0] || product.colors?.[0]?.images?.[0]} alt={product.name} /></td>
-                  <td className="product-name-cell">{product.name}</td>
-                  <td><span className="category-badge">{product.category}</span></td>
-                  <td><span className={`gender-badge gender-${(product.gender || '').toLowerCase()}`}>{product.gender === 'Men' ? '👨' : product.gender === 'Women' ? '👩' : product.gender === 'Children' ? '👦' : '—'} {product.gender || '—'}</span></td>
-                  <td>{product.styleTags?.length ? product.styleTags.map(s => <span key={s} className="style-badge" style={{marginRight:'0.25rem'}}>{s}</span>) : <span style={{ color: 'rgba(255,255,255,0.3)' }}>—</span>}</td>
-                  <td>
-                    <div className="color-swatches-admin">
-                      {(product.colors || []).map((c, i) => (
-                        <span key={i} className="color-swatch-admin" style={{ background: c.hex }} title={c.name} />
-                      ))}
-                      {(!product.colors || product.colors.length === 0) && <span style={{ color: 'rgba(255,255,255,0.3)' }}>—</span>}
-                    </div>
-                  </td>
-                  <td>{Array.isArray(product.grams) ? product.grams.join(', ') : product.grams}</td>
-                  <td>
-                    <div className="price-list">
-                      {product.prices && typeof product.prices === 'object'
-                        ? Object.entries(product.prices).map(([size, price]) => {
-                          const orig = product.originalPrices?.[size];
-                          const disc = calcDiscount(orig, price);
-                          return (
-                            <div key={size} className="price-list-row">
-                              <span className="price-size">{size}</span>
-                              {orig && Number(orig) > Number(price) && <span className="price-original">₹{orig}</span>}
-                              <strong className="price-sale">₹{price}</strong>
-                              {disc && <span className="discount-pill">-{disc}%</span>}
-                            </div>
-                          );
-                        })
-                        : <strong className="price-sale">₹{product.price || 0}</strong>}
-                    </div>
-                  </td>
-                  <td>{product.tag ? <span className="tag-badge">{TAGS.find(t => t.value === product.tag)?.label || product.tag}</span> : <span style={{ color: 'rgba(255,255,255,0.3)' }}>—</span>}</td>
-                  <td>
-                    <div className="ac-stock-cell">
-                      <div className="ac-stock-breakdown">
-                        {(product.colors || []).map((c, ci) => (
-                          <div key={ci} className="ac-stock-color-row">
-                            <span className="ac-stock-color-dot" style={{ background: c.hex }} />
-                            <span className="ac-stock-color-name">{c.name || `C${ci+1}`}:</span>
-                            {Object.entries(c.stock || {}).length > 0
-                              ? Object.entries(c.stock).map(([size, qty]) => (
-                                  <span key={size} className={`ac-stock-size-qty ${Number(qty) <= 5 ? 'low' : ''}`}>{size}:{qty}</span>
-                                ))
-                              : <span style={{color:'rgba(255,255,255,0.3)',fontSize:'0.75rem'}}>∞</span>}
-                          </div>
+                <>
+                  <tr key={product.id}>
+                    <td><img src={product.images?.[0] || product.colors?.[0]?.images?.[0]} alt={product.name} /></td>
+                    <td className="product-name-cell">{product.name}</td>
+                    <td><span className="category-badge">{product.category}</span></td>
+                    <td><span className={`gender-badge gender-${(product.gender || '').toLowerCase()}`}>{product.gender === 'Men' ? '👨' : product.gender === 'Women' ? '👩' : product.gender === 'Children' ? '👦' : '—'} {product.gender || '—'}</span></td>
+                    <td>{product.styleTags?.length ? product.styleTags.map(s => <span key={s} className="style-badge" style={{marginRight:'0.25rem'}}>{s}</span>) : <span style={{ color: 'rgba(255,255,255,0.3)' }}>—</span>}</td>
+                    <td>
+                      <div className="color-swatches-admin">
+                        {(product.colors || []).map((c, i) => (
+                          <span key={i} className="color-swatch-admin" style={{ background: c.hex }} title={c.name} />
                         ))}
-                        {(!product.colors || product.colors.length === 0) && <span style={{color:'rgba(255,255,255,0.3)'}}>∞</span>}
+                        {(!product.colors || product.colors.length === 0) && <span style={{ color: 'rgba(255,255,255,0.3)' }}>—</span>}
                       </div>
-                      <button className="ac-add-stock-btn" onClick={() => { setStockModal(product); setAddStockQty(''); }} title="Add Stock">+ Stock</button>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="action-btns">
-                      <button className="edit-btn" onClick={() => handleEdit(product)}>✏️ Edit</button>
-                      <button className="delete-btn" onClick={() => handleDelete(product.id)}>🗑️ Delete</button>
-                    </div>
-                  </td>
-                </tr>
+                    </td>
+                    <td>{Array.isArray(product.grams) ? product.grams.join(', ') : product.grams}</td>
+                    <td>
+                      <div className="price-list">
+                        {product.prices && typeof product.prices === 'object'
+                          ? Object.entries(product.prices).map(([size, price]) => {
+                            const orig = product.originalPrices?.[size];
+                            const disc = calcDiscount(orig, price);
+                            return (
+                              <div key={size} className="price-list-row">
+                                <span className="price-size">{size}</span>
+                                {orig && Number(orig) > Number(price) && <span className="price-original">₹{orig}</span>}
+                                <strong className="price-sale">₹{price}</strong>
+                                {disc && <span className="discount-pill">-{disc}%</span>}
+                              </div>
+                            );
+                          })
+                          : <strong className="price-sale">₹{product.price || 0}</strong>}
+                      </div>
+                    </td>
+                    <td>{product.tag ? <span className="tag-badge">{TAGS.find(t => t.value === product.tag)?.label || product.tag}</span> : <span style={{ color: 'rgba(255,255,255,0.3)' }}>—</span>}</td>
+                    <td>
+                      <div className="ac-stock-cell">
+                        <div className="ac-stock-breakdown">
+                          {(product.colors || []).map((c, ci) => (
+                            <div key={ci} className="ac-stock-color-row">
+                              <span className="ac-stock-color-dot" style={{ background: c.hex }} />
+                              <span className="ac-stock-color-name">{c.name || `C${ci+1}`}:</span>
+                              {Object.entries(c.stock || {}).length > 0
+                                ? Object.entries(c.stock).map(([size, qty]) => (
+                                    <span key={size} className={`ac-stock-size-qty ${Number(qty) <= 5 ? 'low' : ''}`}>{size}:{qty}</span>
+                                  ))
+                                : <span style={{color:'rgba(255,255,255,0.3)',fontSize:'0.75rem'}}>∞</span>}
+                            </div>
+                          ))}
+                          {(!product.colors || product.colors.length === 0) && <span style={{color:'rgba(255,255,255,0.3)'}}>∞</span>}
+                        </div>
+                        <button className="ac-add-stock-btn" onClick={() => { setStockModal(product); setAddStockQty(''); }} title="Add Stock">+ Stock</button>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="action-btns">
+                        <button className={`edit-btn ${inlineEditId === product.id ? 'active' : ''}`} onClick={() => inlineEditId === product.id ? resetForm() : handleEdit(product)}>
+                          {inlineEditId === product.id ? '✕ Close' : '✏️ Edit'}
+                        </button>
+                        <button className="delete-btn" onClick={() => handleDelete(product.id)}>🗑️ Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                  {inlineEditId === product.id && (
+                    <tr key={`edit-${product.id}`} className="inline-edit-row">
+                      <td colSpan="11">
+                        <div ref={inlineFormRef} className="inline-edit-wrap">
+                          <form onSubmit={handleSubmit} className="product-form">
+
+                            <div className="form-field">
+                              <label>Product Name *</label>
+                              <input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+                            </div>
+
+                            <div className="form-field">
+                              <label>Category *</label>
+                              <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value, styleTags: [], grams: [], prices: {} })} required>
+                                <option value="">Select category</option>
+                                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                              </select>
+                            </div>
+
+                            <div className="form-field">
+                              <label>Gender *</label>
+                              <div className="gender-options">
+                                {['Men', 'Women', 'Children'].map(g => (
+                                  <label key={g} className={`gender-option ${formData.gender === g ? 'active' : ''}`}>
+                                    <input type="radio" name="gender" value={g} checked={formData.gender === g} onChange={() => setFormData({ ...formData, gender: g })} required />
+                                    <span>{g === 'Men' ? '👨' : g === 'Women' ? '👩' : '👦'}</span>{g}
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="form-field full-width">
+                              <label>Style</label>
+                              {!formData.category || !CATEGORY_STYLES[formData.category]
+                                ? <div className="size-hint">Select a category first</div>
+                                : (
+                                  <div className="style-tag-options">
+                                    {CATEGORY_STYLES[formData.category].map(s => (
+                                      <button type="button" key={s}
+                                        className={`style-tag-btn ${formData.styleTags.includes(s) ? 'active' : ''}`}
+                                        onClick={() => setFormData(prev => ({
+                                          ...prev,
+                                          styleTags: prev.styleTags.includes(s) ? prev.styleTags.filter(t => t !== s) : [...prev.styleTags, s]
+                                        }))}>
+                                        {s}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )
+                              }
+                            </div>
+
+                            <div className="form-field">
+                              <label>{FOOTWEAR_CATS.includes(formData.category) ? 'Sizes (UK) *' : 'Sizes *'}</label>
+                              {!formData.category ? <div className="size-hint">Select a category first</div> : (
+                                <div className="custom-dropdown">
+                                  <div className="dropdown-header" onClick={() => setShowWeightDropdown(!showWeightDropdown)}>
+                                    {formData.grams.length > 0 ? formData.grams.join(', ') : 'Select sizes'}
+                                  </div>
+                                  {showWeightDropdown && (
+                                    <div className="dropdown-list">
+                                      {weightOptions.map(size => (
+                                        <label key={size} className="dropdown-item">
+                                          <input type="checkbox" checked={formData.grams.includes(size)} onChange={() => handleWeightToggle(size)} />{size}
+                                        </label>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="form-field full-width">
+                              <label>Prices (₹) *</label>
+                              <div className="price-inputs">
+                                {formData.grams.length === 0 && <p style={{ color: 'rgba(255,255,255,0.3)', margin: 0, fontSize: '0.88rem' }}>Select sizes first</p>}
+                                {formData.grams.map(size => {
+                                  const disc = calcDiscount(formData.originalPrices[size], formData.prices[size]);
+                                  return (
+                                    <div key={size} className="price-input-row">
+                                      <span>{size}</span>
+                                      <div className="price-input-group">
+                                        <input type="number" value={formData.originalPrices[size] || ''} onChange={e => setFormData(prev => ({ ...prev, originalPrices: { ...prev.originalPrices, [size]: e.target.value } }))} placeholder="MRP" />
+                                        <input type="number" value={formData.prices[size] || ''} onChange={e => setFormData(prev => ({ ...prev, prices: { ...prev.prices, [size]: e.target.value } }))} placeholder="Sale Price" required />
+                                        {disc && <span className="discount-pill">-{disc}%</span>}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            <div className="form-field full-width">
+                              <label>Description *</label>
+                              <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} required />
+                            </div>
+
+                            <div className="form-field">
+                              <label>Badge Tag</label>
+                              <select value={formData.tag} onChange={e => setFormData({ ...formData, tag: e.target.value })}>
+                                <option value="">— No Tag —</option>
+                                {TAGS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                              </select>
+                            </div>
+
+                            <div className="form-field full-width">
+                              <label>Colors & Images *</label>
+                              <div className="colors-section">
+                                {formData.colors.map((color, ci) => (
+                                  <div key={ci} className="color-block">
+                                    <div className="color-block-header">
+                                      <span className="color-block-num">Color {ci + 1}</span>
+                                      <div className="color-name-row">
+                                        <input type="text" placeholder="Color name" value={color.name} onChange={e => updateColor(ci, 'name', e.target.value)} className="color-name-input" />
+                                        <div className="color-picker-wrap">
+                                          <input type="color" value={color.hex} onChange={e => updateColor(ci, 'hex', e.target.value)} className="color-picker" />
+                                          <span className="color-hex">{color.hex}</span>
+                                        </div>
+                                      </div>
+                                      {formData.colors.length > 1 && (
+                                        <button type="button" className="remove-color-btn" onClick={() => removeColor(ci)}>✕ Remove</button>
+                                      )}
+                                    </div>
+                                    <div className="color-images">
+                                      {[0, 1, 2].map(imgIdx => (
+                                        <input key={imgIdx} type="url" placeholder={`Image ${imgIdx + 1} URL`} value={color.images[imgIdx] || ''} onChange={e => updateColorImage(ci, imgIdx, e.target.value)} required={imgIdx === 0} />
+                                      ))}
+                                    </div>
+                                    {formData.grams.length > 0 && (
+                                      <div className="color-stock-section">
+                                        <span className="color-stock-label">Stock per size</span>
+                                        <div className="color-stock-grid">
+                                          {formData.grams.map(size => (
+                                            <div key={size} className="color-stock-row">
+                                              <span className="color-stock-size">{size}</span>
+                                              <input type="number" min="0" placeholder="qty" value={color.stock?.[size] ?? ''} onChange={e => updateColorStock(ci, size, e.target.value)} className="color-stock-input" />
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                                <button type="button" className="add-color-btn" onClick={addColor}>+ Add Color</button>
+                              </div>
+                            </div>
+
+                            <div className="form-actions">
+                              <button type="button" className="admin-btn cancel-btn" onClick={resetForm}>Cancel</button>
+                              <button type="submit" className="admin-btn" disabled={loading}>
+                                {loading ? <><span className="spinner" />Updating...</> : 'Update Product'}
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
               ))}
             </tbody>
           </table>
