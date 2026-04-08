@@ -8,12 +8,15 @@ import config from '../config';
 import './AdminProducts.css';
 import './AdminSliders.css';
 
+const toSlug = (name, id) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + id;
+
 const AdminSliders = () => {
   const [sliders, setSliders] = useState([]);
+  const [products, setProducts] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingSlider, setEditingSlider] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ title: '', imageUrl: '', order: 1 });
+  const [formData, setFormData] = useState({ title: '', desktop: '', mobile: '', heading: '', desc: '', tag: '', order: 1, productId: '' });
   const navigate = useNavigate();
 
   useEffect(() => { verifyToken(); }, [navigate]);
@@ -25,12 +28,19 @@ const AdminSliders = () => {
       const res = await axios.get(`${config.API_URL}/api/users/verify`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.data.success) { fetchSliders(); }
+      if (res.data.success) { fetchSliders(); fetchProducts(); }
       else { localStorage.removeItem('token'); localStorage.removeItem('user'); navigate('/login'); }
     } catch (error) {
-      if (error.response?.status === 404) { fetchSliders(); }
+      if (error.response?.status === 404) { fetchSliders(); fetchProducts(); }
       else { localStorage.removeItem('token'); localStorage.removeItem('user'); navigate('/login'); }
     }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get(`${config.API_URL}/api/products`);
+      setProducts(res.data.success ? res.data.products : []);
+    } catch {}
   };
 
   const fetchSliders = async () => {
@@ -50,7 +60,20 @@ const AdminSliders = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const sliderData = { title: formData.title, imageUrl: formData.imageUrl, order: Number(formData.order) };
+      const linkedProduct = products.find(p => String(p.id) === String(formData.productId));
+      const sliderData = {
+        title: formData.title,
+        imageUrl: formData.desktop,
+        desktop: formData.desktop,
+        mobile: formData.mobile,
+        heading: formData.heading,
+        desc: formData.desc,
+        tag: formData.tag,
+        order: Number(formData.order),
+        productId: formData.productId || null,
+        productSlug: linkedProduct ? toSlug(linkedProduct.name, linkedProduct.id) : null,
+        productName: linkedProduct ? linkedProduct.name.trim() : null,
+      };
       if (editingSlider) {
         await axios.put(`${config.API_URL}/api/sliders/${editingSlider.id}`, sliderData, {
           headers: { Authorization: `Bearer ${token}` }
@@ -87,12 +110,12 @@ const AdminSliders = () => {
 
   const handleEdit = (slider) => {
     setEditingSlider(slider);
-    setFormData({ title: slider.title, imageUrl: slider.imageUrl, order: slider.order });
+    setFormData({ title: slider.title, desktop: slider.desktop || slider.imageUrl || '', mobile: slider.mobile || '', heading: slider.heading || '', desc: slider.desc || '', tag: slider.tag || '', order: slider.order, productId: slider.productId ? String(slider.productId) : '' });
     setShowForm(true);
   };
 
   const resetForm = () => {
-    setFormData({ title: '', imageUrl: '', order: 1 });
+    setFormData({ title: '', desktop: '', mobile: '', heading: '', desc: '', tag: '', order: 1, productId: '' });
     setEditingSlider(null);
     setShowForm(false);
   };
@@ -123,32 +146,54 @@ const AdminSliders = () => {
             <form onSubmit={handleSubmit} className="slider-form">
               <div className="form-field">
                 <label>Slider Title *</label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g. Summer Collection"
-                  required
-                />
+                <input type="text" value={formData.title}
+                  onChange={e => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="e.g. Summer Collection" required />
               </div>
               <div className="form-field">
-                <label>Image URL *</label>
-                <input
-                  type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  placeholder="https://example.com/image.jpg"
-                  required
-                />
+                <label>Desktop Image URL *</label>
+                <input type="url" value={formData.desktop}
+                  onChange={e => setFormData({ ...formData, desktop: e.target.value })}
+                  placeholder="https://..." required />
+              </div>
+              <div className="form-field">
+                <label>Mobile Image URL</label>
+                <input type="url" value={formData.mobile}
+                  onChange={e => setFormData({ ...formData, mobile: e.target.value })}
+                  placeholder="https://... (optional, falls back to desktop)" />
+              </div>
+              <div className="form-field">
+                <label>Heading</label>
+                <input type="text" value={formData.heading}
+                  onChange={e => setFormData({ ...formData, heading: e.target.value })}
+                  placeholder="e.g. Welcome to TheAlphaZone" />
+              </div>
+              <div className="form-field">
+                <label>Description</label>
+                <input type="text" value={formData.desc}
+                  onChange={e => setFormData({ ...formData, desc: e.target.value })}
+                  placeholder="e.g. Fashion that defines you" />
+              </div>
+              <div className="form-field">
+                <label>Tag</label>
+                <input type="text" value={formData.tag}
+                  onChange={e => setFormData({ ...formData, tag: e.target.value })}
+                  placeholder="e.g. New Collection" />
               </div>
               <div className="form-field">
                 <label>Display Order *</label>
-                <input
-                  type="number"
-                  value={formData.order}
-                  onChange={(e) => setFormData({ ...formData, order: e.target.value })}
-                  min="1" required
-                />
+                <input type="number" value={formData.order}
+                  onChange={e => setFormData({ ...formData, order: e.target.value })}
+                  min="1" required />
+              </div>
+              <div className="form-field">
+                <label>Link to Product <span style={{color:'rgba(255,255,255,0.4)',fontWeight:400,textTransform:'none'}}>( optional )</span></label>
+                <select value={formData.productId} onChange={e => setFormData({ ...formData, productId: e.target.value })}>
+                  <option value="">— No product link —</option>
+                  {products.map(p => (
+                    <option key={p.id} value={String(p.id)}>{p.name.trim()} ({p.category})</option>
+                  ))}
+                </select>
               </div>
               <div className="form-actions" style={{ gridColumn: '1 / -1' }}>
                 <button type="button" className="admin-btn cancel-btn" onClick={resetForm}>Cancel</button>
@@ -168,12 +213,15 @@ const AdminSliders = () => {
             ) : sliders.map(slider => (
               <div key={slider.id} className="slider-card">
                 <div className="slider-img-wrap">
-                  <img src={slider.imageUrl} alt={slider.title} />
+                  <img src={slider.desktop || slider.imageUrl} alt={slider.title} />
                   <span className="slider-order-badge">#{slider.order}</span>
                 </div>
                 <div className="slider-info">
                   <h3>{slider.title}</h3>
-                  <p>Display order: {slider.order}</p>
+                  {slider.heading && <p className="slider-heading-preview">{slider.heading}</p>}
+                  {slider.tag && <span className="slider-tag-preview">{slider.tag}</span>}
+                  {slider.productName && <p style={{color:'rgba(255,255,255,0.45)',fontSize:'0.78rem',margin:'0.3rem 0 0'}}>🔗 {slider.productName}</p>}
+                  <p>Order: {slider.order}</p>
                   <div className="action-btns">
                     <button className="edit-btn" onClick={() => handleEdit(slider)}>✏️ Edit</button>
                     <button className="delete-btn" onClick={() => handleDelete(slider.id)}>🗑️ Delete</button>

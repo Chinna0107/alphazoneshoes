@@ -7,8 +7,8 @@ import config from '../config';
 import AdminHeader from '../components/AdminHeader';
 import './AdminProducts.css';
 
-const CATEGORIES  = ['Sandals', 'Shoes', 'Flip Flops', 'T-Shirts', 'Track Pants'];
-const FOOTWEAR_CATS = ['Sandals', 'Shoes', 'Flip Flops'];
+const CATEGORIES  = ['Sandals', 'Shoes', 'Flip Flops', 'Slides', 'T-Shirts', 'Track Pants'];
+const FOOTWEAR_CATS = ['Sandals', 'Shoes', 'Flip Flops', 'Slides'];
 const APPAREL_CATS  = ['T-Shirts', 'Track Pants'];
 const FOOTWEAR_SIZES = ['UK 4','UK 5','UK 6','UK 7','UK 8','UK 9','UK 10','UK 11','UK 12'];
 const APPAREL_SIZES  = ['S','M','L','XL','XXL','XXXL'];
@@ -28,6 +28,7 @@ const CATEGORY_STYLES = {
   'Shoes':       ['Casual Shoes','Formal Shoes','Sports / Running','Sneakers','Party Wear','Office Wear','Luxury / Premium','Outdoor / Trekking','Training / Gym','Trendy Fashion'],
   'Sandals':     ['Casual Sandals','Ethnic Wear','Party Wear','Office Wear','Comfort Wear','Summer Collection','Outdoor Use','Stylish / Trendy','Flat Sandals','Heeled Sandals'],
   'Flip Flops':  ['Casual Everyday','Beach Wear','Home Comfort','Lightweight','Travel Essentials','Summer Special','Budget Friendly','Trendy Prints','Waterproof','Quick Wear'],
+  'Slides':      ['Casual Everyday','Beach Wear','Home Comfort','Lightweight','Travel Essentials','Summer Special','Sports / Active','Trendy Prints','Waterproof','Quick Wear'],
 };
 
 const EMPTY_COLOR = { name: '', hex: '#ffffff', images: ['', '', ''], stock: {} };

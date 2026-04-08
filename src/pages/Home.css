@@ -137,7 +137,7 @@
 
 .categories-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 1.25rem;
 }
 
@@ -165,12 +165,27 @@
 .cat-icon { font-size: 2.8rem; display: block; margin-bottom: 0.75rem; }
 
 .cat-react-icon {
-  font-size: 2.8rem;
-  color: #e1782d;
+  font-size: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 0.75rem;
+  margin: 0 auto 0.85rem;
+  width: 52px; height: 52px;
+  background: linear-gradient(135deg, rgba(225,120,45,0.18), rgba(180,30,30,0.12));
+  border-radius: 20px;
+  border: 1.5px solid rgba(225,120,45,0.3);
+  box-shadow: 0 4px 18px rgba(180,30,30,0.2), inset 0 1px 0 rgba(255,255,255,0.08);
+  color: #e1782d;
+  transition: all 0.35s ease;
+  backdrop-filter: blur(8px);
+}
+
+.cat-card:hover .cat-react-icon {
+  background: linear-gradient(135deg, rgba(225,120,45,0.32), rgba(180,30,30,0.22));
+  box-shadow: 0 8px 28px rgba(225,120,45,0.35), inset 0 1px 0 rgba(255,255,255,0.12);
+  border-color: rgba(225,120,45,0.6);
+  transform: scale(1.08);
+  color: #f0a54b;
 }
 
 .cat-img {
@@ -495,7 +510,7 @@
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .categories-grid { grid-template-columns: repeat(3, 1fr); }
+  .categories-grid { grid-template-columns: repeat(6, 1fr); gap: 0.75rem; }
   .features-grid { grid-template-columns: repeat(2, 1fr); }
   .products-grid { grid-template-columns: repeat(3, 1fr); }
 }
@@ -563,10 +578,18 @@
     line-height: 1;
   }
   .mob-cat-react-icon {
-    font-size: 2.2rem;
+    font-size: 1.5rem;
     color: #e1782d;
     display: flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, rgba(225,120,45,0.18), rgba(180,30,30,0.12));
+    border-radius: 14px;
+    border: 1.5px solid rgba(225,120,45,0.3);
+    box-shadow: 0 4px 14px rgba(180,30,30,0.2), inset 0 1px 0 rgba(255,255,255,0.07);
+    backdrop-filter: blur(8px);
+    transition: all 0.25s ease;
   }
+  .mob-cat-slides-icon { display: none; }
   .mob-cat-card h3 {
     font-size: 0.82rem;
     font-weight: 700;
@@ -630,7 +653,7 @@
   .product-card { padding: 0.7rem; }
   .section-title { font-size: 1.3rem; }
   .mob-cat-card { flex: 0 0 95px; padding: 0.9rem 0.6rem; }
-  .mob-cat-icon, .mob-cat-react-icon { font-size: 1.9rem; }
+  .mob-cat-icon, .mob-cat-react-icon { font-size: 1.3rem; width: 36px; height: 36px; }
   .mob-cat-card h3 { font-size: 0.76rem; }
 }
 

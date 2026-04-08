@@ -1,23 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import axios from 'axios';
 import Slider from 'react-slick';
-import { MdStar, MdLocalShipping, MdVerified, MdPayment, MdPhone, MdShoppingCart, MdMessage } from 'react-icons/md';
-import { PiPantsFill } from 'react-icons/pi';
+import { MdStar, MdLocalShipping, MdVerified, MdPayment, MdPhone } from 'react-icons/md';
+import { PiPantsFill, PiTShirtFill } from 'react-icons/pi';
 import { TbFlipFlops } from 'react-icons/tb';
+import { GiSandal, GiRunningShoe, GiSlippers } from 'react-icons/gi';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import useProducts from '../hooks/useProducts';
-import config from '../config';
+import useSliders from '../hooks/useSliders';
 import './Home.css';
 
 const CATEGORIES = [
-  { name: 'Sandals', icon: '👡', desc: 'Stylish sandals for every occasion' },
-  { name: 'Shoes', icon: '👟', desc: 'Premium footwear for all lifestyles' },
-  { name: 'Flip Flops', icon: null, reactIcon: 'flipflops', desc: 'Comfortable home & casual flip flops' },
-  { name: 'T-Shirts', icon: '👕', desc: 'Trendy tees for every mood' },
-  { name: 'Track Pants', icon: null, img: null, reactIcon: 'pants', desc: 'Comfortable track & lounge wear' },
+  { name: 'Sandals',     reactIcon: 'sandals',   desc: 'Stylish sandals for every occasion' },
+  { name: 'Shoes',      reactIcon: 'shoes',     desc: 'Premium footwear for all lifestyles' },
+  { name: 'Flip Flops', reactIcon: 'flipflops', desc: 'Comfortable home & casual flip flops' },
+  { name: 'Slides',     reactIcon: 'slides',    desc: 'Trendy slides for everyday comfort' },
+  { name: 'T-Shirts',   reactIcon: 'tshirt',    desc: 'Trendy tees for every mood' },
+  { name: 'Track Pants',reactIcon: 'pants',     desc: 'Comfortable track & lounge wear' },
 ];
 
 const SLIDES = [
@@ -47,11 +48,24 @@ const SLIDES = [
   },
 ];
 
+const CategoryIcon = ({ type, className }) => {
+  const props = { className };
+  switch (type) {
+    case 'sandals':   return <GiSandal {...props} />;
+    case 'shoes':     return <GiRunningShoe {...props} />;
+    case 'flipflops': return <TbFlipFlops {...props} />;
+    case 'slides':    return <GiSlippers {...props} />;
+    case 'tshirt':    return <PiTShirtFill {...props} />;
+    case 'pants':     return <PiPantsFill {...props} />;
+    default:          return null;
+  }
+};
+
 const Home = () => {
   const { products } = useProducts();
-  const [sliders, setSliders] = useState(SLIDES);
+  const { sliders: fetchedSliders } = useSliders();
+  const sliders = fetchedSliders.length ? fetchedSliders : SLIDES;
   const [selectedWeights, setSelectedWeights] = useState({});
-  const [loading, setLoading] = useState(true);
   const { addToCart, updateQuantity, isInCart, getCartQuantity } = useCart();
   const navigate = useNavigate();
 
@@ -61,18 +75,6 @@ const Home = () => {
     return Math.round(((o - s) / o) * 100);
   };
 
-  useEffect(() => {
-    fetchSliders();
-  }, []);
-
-  const fetchSliders = async () => {
-    setLoading(false);
-    try {
-      const res = await axios.get(`${config.API_URL}/api/sliders`);
-      if (res.data.success && res.data.sliders.length) setSliders(res.data.sliders);
-    } catch { /* silent */ }
-  };
-
   const sliderSettings = {
     dots: true, infinite: true, speed: 600, slidesToShow: 1, slidesToScroll: 1,
     autoplay: true, autoplaySpeed: 4000, accessibility: false, focusOnSelect: false,
@@ -80,10 +82,7 @@ const Home = () => {
 
   return (
     <div className="home">
-      {loading ? (
-        <div className="home-loader"><div className="loader-ring" /></div>
-      ) : (
-        <>
+      <>
           {/* Hero Slider */}
           <div className="hero-wrap">
             <Slider {...sliderSettings} className="hero-slider">
@@ -100,7 +99,7 @@ const Home = () => {
                         <h1>{s.heading || 'Welcome to TheAlphaZone'}</h1>
                         <p>{s.desc || 'Fashion that defines you — sandals, shoes, tshirts & more'}</p>
                         <div className="slide-btns">
-                          <button className="hero-btn" onClick={() => navigate('/products')}>Shop Now →</button>
+                          <button className="hero-btn" onClick={() => s.productSlug ? navigate(`/products/${s.productSlug}`) : navigate('/products')}>Shop Now →</button>
                           <button className="hero-btn-outline" onClick={() => navigate('/about')}>Our Story</button>
                         </div>
                       </div>
@@ -117,10 +116,7 @@ const Home = () => {
             <div className="mob-cat-scroll">
               {CATEGORIES.map(cat => (
                 <div key={cat.name} className="mob-cat-card" onClick={() => navigate('/products', { state: { category: cat.name } })}>
-                  {cat.reactIcon
-                    ? cat.reactIcon === 'flipflops' ? <TbFlipFlops className="mob-cat-react-icon" /> : <PiPantsFill className="mob-cat-react-icon" />
-                    : <span className="mob-cat-icon">{cat.icon}</span>
-                  }
+                  <CategoryIcon type={cat.reactIcon} className="mob-cat-react-icon" />
                   <h3>{cat.name}</h3>
                   <span className="mob-cat-arrow">→</span>
                 </div>
@@ -134,12 +130,7 @@ const Home = () => {
             <div className="categories-grid">
               {CATEGORIES.map(cat => (
                 <div key={cat.name} className="cat-card glass" onClick={() => navigate('/products', { state: { category: cat.name } })}>
-                  {cat.img
-                    ? <img src={cat.img} alt={cat.name} className="cat-img" />
-                    : cat.reactIcon
-                    ? cat.reactIcon === 'flipflops' ? <TbFlipFlops className="cat-react-icon" /> : <PiPantsFill className="cat-react-icon" />
-                    : <span className="cat-icon">{cat.icon}</span>
-                  }
+                  <CategoryIcon type={cat.reactIcon} className="cat-react-icon" />
                   <h3>{cat.name}</h3>
                   <p>{cat.desc}</p>
                   <span className="cat-arrow">→</span>
@@ -282,7 +273,6 @@ const Home = () => {
             </div>
           </section>
         </>
-      )}
     </div>
   );
 };

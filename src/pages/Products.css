@@ -3,6 +3,24 @@
   min-height: 100vh;
 }
 
+/* Banner Slider */
+.products-banner-slider {
+  width: 100%;
+  overflow: hidden;
+}
+.products-banner-img {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  display: block;
+}
+@media (max-width: 768px) {
+  .products-banner-img { height: 160px; }
+}
+@media (max-width: 480px) {
+  .products-banner-img { height: 130px; }
+}
+
 /* Search Bar */
 .products-topbar {
   padding: 0.75rem 1.5rem;

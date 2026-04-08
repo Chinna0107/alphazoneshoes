@@ -2,34 +2,30 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import config from '../config';
 
-const CACHE_KEY = 'az_products_cache';
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// In-memory cache — no localStorage size limits, no serialization issues
+let memCache = { data: null, ts: 0 };
+
 const readCache = () => {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
-    const { data, ts } = JSON.parse(raw);
-    if (Date.now() - ts > CACHE_TTL) return null; // expired
-    return data;
-  } catch { return null; }
+  if (!memCache.data) return null;
+  if (Date.now() - memCache.ts > CACHE_TTL) return null;
+  return memCache.data;
 };
 
 const writeCache = (data) => {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ data, ts: Date.now() }));
-  } catch { /* storage full — silent */ }
+  memCache = { data, ts: Date.now() };
 };
 
 export const invalidateProductsCache = () => {
-  try { localStorage.removeItem(CACHE_KEY); } catch { /* silent */ }
+  memCache = { data: null, ts: 0 };
 };
 
 const useProducts = () => {
   const cached = readCache();
   const [products, setProducts] = useState(cached || []);
-  const [loading, setLoading] = useState(!cached); // no spinner if cache hit
-  const [error, setError] = useState(null);
+  const [loading, setLoading]   = useState(!cached);
+  const [error, setError]       = useState(null);
 
   const fetchProducts = useCallback(async (force = false) => {
     if (!force) {

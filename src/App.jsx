@@ -22,6 +22,9 @@ import About from './pages/About'
 import Policies from './pages/Policies'
 import './App.css'
 
+// Clear old localStorage product cache
+try { localStorage.removeItem('az_products'); localStorage.removeItem('az_products_cache'); } catch {}
+
 function ScrollToTop() {
   const { pathname } = useLocation();
 

@@ -8,24 +8,21 @@ export const useCart = () => {
   return context;
 };
 
+// Shared in-memory product list — no localStorage, no size limits
+let _products = [];
+export const setProductsList = (list) => { _products = list; };
+const findProduct = (id) => _products.find(p => String(p.id) === String(id));
+
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState({});
-  const [productsCache, setProductsCache] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('az_products') || '[]'); }
-    catch { return []; }
-  });
 
-  const cacheProducts = (list) => {
-    setProductsCache(list);
-    try { localStorage.setItem('az_products', JSON.stringify(list)); } catch { /* silent */ }
-  };
+  const cacheProducts = (list) => setProductsList(list);
 
-  // color is optional — { name, hex }
   const addToCart = (productId, weight, color = null) => {
     const colorKey = color ? `${color.name || color.hex}` : '';
     const cartKey = `${productId}-${weight}${colorKey ? `-${colorKey}` : ''}`;
     const safeColor = color ? { name: color.name || '', hex: color.hex || '' } : null;
-    const product = productsCache.find(p => String(p.id) === String(productId));
+    const product = findProduct(productId);
     const colorObj = color ? product?.colors?.find(c => c.name === color.name || c.hex === color.hex) : null;
     const stock = colorObj?.stock?.[weight];
     const maxQty = stock !== undefined ? Number(stock) : Infinity;
@@ -39,14 +36,10 @@ export const CartProvider = ({ children }) => {
   const updateQuantity = (productId, weight, change, color = null) => {
     const colorKey = color ? `${color.name || color.hex}` : '';
     const cartKey = `${productId}-${weight}${colorKey ? `-${colorKey}` : ''}`;
-    const product = productsCache.find(p => String(p.id) === String(productId));
-    const colorObj = color ? product?.colors?.find(c => c.name === color.name || c.hex === color.hex) : null;
-    const stock = colorObj?.stock?.[weight];
-    const maxQty = stock !== undefined ? Number(stock) : Infinity;
     setCart(prev => {
       const current = prev[cartKey];
       if (!current) return prev;
-      const newQty = Math.min(current.quantity + change, maxQty);
+      const newQty = current.quantity + change;
       if (newQty <= 0) {
         const next = { ...prev };
         delete next[cartKey];
@@ -69,6 +62,9 @@ export const CartProvider = ({ children }) => {
     const colorKey = color ? `${color.name || color.hex}` : '';
     return cart[`${productId}-${weight}${colorKey ? `-${colorKey}` : ''}`]?.quantity || 0;
   };
+
+  // Keep productsCache for Checkout backward compat
+  const productsCache = _products;
 
   return (
     <CartContext.Provider value={{ cart, addToCart, updateQuantity, clearCart, getCartCount, isInCart, getCartQuantity, productsCache, cacheProducts }}>
