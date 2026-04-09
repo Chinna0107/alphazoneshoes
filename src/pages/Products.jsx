@@ -366,7 +366,7 @@ const Products = () => {
 
                       <div onClick={e => e.stopPropagation()}>
                         {activeStock === 0 ? (
-                          <button className="add-to-cart out-of-stock-btn" disabled>✕ Out of Stock</button>
+                          <button className="add-to-cart out-of-stock-btn" disabled>✕ Out of Stock Check for other sizes</button>
                         ) : !isInCart(pid, currentWeight, activeColor) ? (
                           <button className="add-to-cart" onClick={() => addToCart(pid, currentWeight, activeColor)}>Add to Cart</button>
                         ) : (
