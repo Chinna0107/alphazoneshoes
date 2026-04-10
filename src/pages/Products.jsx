@@ -351,12 +351,12 @@ const Products = () => {
                       )}
 
                       <div className="product-details" onClick={e => e.stopPropagation()}>
-                        <select className="grams-dropdown" value={currentWeight}
+                        {/* <select className="grams-dropdown" value={currentWeight}
                           onChange={e => setSelectedWeights({ ...selectedWeights, [product.id]: e.target.value })}>
                           {Array.isArray(product.grams)
                             ? product.grams.map((g, i) => <option key={i} value={g}>{g}</option>)
                             : <option value={product.grams}>{product.grams}</option>}
-                        </select>
+                        </select> */}
                         <div className="price-section">
                           {origPrice && Number(origPrice) > Number(currentPrice) && <span className="original-price">₹{origPrice}</span>}
                           <span className="price">₹{currentPrice}</span>
@@ -364,7 +364,7 @@ const Products = () => {
                         </div>
                       </div>
 
-                      <div onClick={e => e.stopPropagation()}>
+                      {/* <div onClick={e => e.stopPropagation()}>
                         {activeStock === 0 ? (
                           <button className="add-to-cart out-of-stock-btn" disabled>✕ Out of Stock Check for other sizes</button>
                         ) : !isInCart(pid, currentWeight, activeColor) ? (
@@ -376,7 +376,7 @@ const Products = () => {
                             <button onClick={() => updateQuantity(pid, currentWeight, 1, activeColor)}>+</button>
                           </div>
                         )}
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 );
