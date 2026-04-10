@@ -24,6 +24,52 @@ const calcDiscount = (orig, sale) => {
   return Math.round(((o - s) / o) * 100);
 };
 
+const APPAREL_ORDER = ['S', 'M', 'L', 'XL', 'XXL'];
+const APPAREL_ORDER_MAP = new Map(APPAREL_ORDER.map((s, i) => [s, i]));
+const SHOES_CATEGORIES = new Set(['Shoes', 'Sandals', 'Flip Flops', 'Slides']);
+const APPAREL_CATEGORIES = new Set(['T-Shirts', 'T Shirts', 'Tshirts', 'Track Pants']);
+
+const normalizeApparelSize = (size) => {
+  if (size == null) return '';
+  const s = String(size).trim().toUpperCase().replace(/\s+/g, '');
+  if (s === 'XS' || s === 'XSMALL') return 'S';
+  if (s === 'XXS') return 'S';
+  if (s === 'XXXL' || s === '3XL') return 'XXL';
+  if (s === '2XL') return 'XXL';
+  if (s === 'X-L' || s === 'X L') return 'XL';
+  return s;
+};
+
+const numericSizeValue = (size) => {
+  const m = String(size).match(/(\d+(\.\d+)?)/);
+  return m ? Number(m[1]) : NaN;
+};
+
+const sortSizesByCategory = (category, sizes) => {
+  if (!Array.isArray(sizes)) return [];
+  if (SHOES_CATEGORIES.has(category)) {
+    return [...sizes].sort((a, b) => {
+      const na = numericSizeValue(a);
+      const nb = numericSizeValue(b);
+      if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
+      if (Number.isFinite(na)) return -1;
+      if (Number.isFinite(nb)) return 1;
+      return String(a).localeCompare(String(b));
+    });
+  }
+  if (APPAREL_CATEGORIES.has(category)) {
+    return [...sizes].sort((a, b) => {
+      const na = normalizeApparelSize(a);
+      const nb = normalizeApparelSize(b);
+      const ia = APPAREL_ORDER_MAP.has(na) ? APPAREL_ORDER_MAP.get(na) : 999;
+      const ib = APPAREL_ORDER_MAP.has(nb) ? APPAREL_ORDER_MAP.get(nb) : 999;
+      if (ia !== ib) return ia - ib;
+      return String(a).localeCompare(String(b));
+    });
+  }
+  return sizes;
+};
+
 const ProductDetail = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -49,7 +95,9 @@ const ProductDetail = () => {
     const found = allProducts.find(p => String(p.id) === String(id));
     if (found) {
       setProduct(found);
-      setSelectedSize(Array.isArray(found.grams) ? found.grams[0] : found.grams || '');
+      const rawSizes = Array.isArray(found.grams) ? found.grams : [found.grams].filter(Boolean);
+      const sortedSizes = sortSizesByCategory(found.category, rawSizes);
+      setSelectedSize(sortedSizes[0] || '');
       setActiveColorIdx(0);
       setActiveImg(0);
     }
@@ -81,7 +129,8 @@ const ProductDetail = () => {
     </div>
   );
 
-  const sizes = Array.isArray(product.grams) ? product.grams : [product.grams].filter(Boolean);
+  const sizesRaw = Array.isArray(product.grams) ? product.grams : [product.grams].filter(Boolean);
+  const sizes = sortSizesByCategory(product.category, sizesRaw);
   const salePrice = product.prices?.[selectedSize] || product.price || 0;
   const origPrice = product.originalPrices?.[selectedSize];
   const discount = calcDiscount(origPrice, salePrice);
