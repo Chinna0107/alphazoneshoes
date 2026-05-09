@@ -186,7 +186,7 @@ const Footer = () => (
         <span>✅ Verified</span>
         <span>🚚 Fast Delivery</span>
       </div>
-      <p>Made with ❤️ by <a href="https://zewo.in" target="_blank" rel="noopener noreferrer">Zewo</a></p>
+      <p>Made with ❤️ by <a href="https://staffarc.in" target="_blank" rel="noopener noreferrer">Zewo</a></p>
     </div>
 
   </footer>
